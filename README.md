@@ -15,6 +15,7 @@ make ZBX_URL=https://zabbix.example.com ZBX_USER=user ZBX_PASSWORD='password' TA
 ```bash
 make backup ZBX_URL=https://zabbix.example.com ZBX_USER=user ZBX_PASSWORD='password' TARGET_DIR=/path/to/git/with/zabbix-xml-file-only
 ```
+
 ### Variables
 - `ZBX_URL` - url to zabbix-server, `https://zabbix.example.com/` or `https://zabbix.example.com/zabbix`
 - `ZBX_USER` - username with admin permission
