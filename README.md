@@ -7,8 +7,9 @@
 - `git`
 
 ## Make review
+1. Create backup and push to `develop` branch in configured git-repository which placed
 ```bash
-make ZBX_URL=https://zabbix.example.com ZBX_USER=user ZBX_PASSWORD='password'
+make ZBX_URL=https://zabbix.example.com ZBX_USER=user ZBX_PASSWORD='password' TARGET_DIR=/path/to/git/with/zabbix-xml-file-only
 ```
 
 ## Supported data

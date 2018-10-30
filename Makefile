@@ -2,19 +2,20 @@
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 ifndef ZBX_URL
-    $(error ZBX_USER is undefined)
+	$(error ZBX_USER is undefined)
 endif
 ifndef ZBX_USER
-    $(error ZBX_USER is undefined)
+	$(error ZBX_USER is undefined)
 endif
 ifndef ZBX_PASSWORD
-    $(error ZBX_PASSWORD is undefined)
+	$(error ZBX_PASSWORD is undefined)
 endif
 ifndef TARGET_DIR
-    $(error TARGET_DIR is undefined)
+	$(error TARGET_DIR is undefined)
 endif
 
-push: backup
+push: pull backup
+	set -e; \
 	cd ${TARGET_DIR}; \
 	git add .; \
 	git commit -m':robot: Autobackup'; \
@@ -22,7 +23,7 @@ push: backup
 
 pull: zbx_env
 	cd ${TARGET_DIR}; \
-	git checkout develop; \
+	git checkout -b develop origin/develop || git checkout develop; \
 	git pull
 
 zbx_env:
