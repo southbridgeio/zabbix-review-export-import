@@ -18,7 +18,8 @@ push: pull backup
 	set -e; \
 	cd ${TARGET_DIR}; \
 	git add .; \
-	git commit -m':robot: Autobackup'; \
+	d=$(date +%Y-%m-%d); \
+	git commit -m':robot: Autobackup $d'; \
 	git push origin develop
 
 pull: zbx_env
