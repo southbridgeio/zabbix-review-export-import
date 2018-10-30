@@ -1,22 +1,35 @@
-.PHONY: prepare env
+.PHONY: zbx_env gitlab_env
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+ifndef ZBX_URL
+    $(error ZBX_USER is undefined)
+endif
+ifndef ZBX_USER
+    $(error ZBX_USER is undefined)
+endif
+ifndef ZBX_PASSWORD
+    $(error ZBX_PASSWORD is undefined)
+endif
+ifndef TARGET_DIR
+    $(error TARGET_DIR is undefined)
+endif
+
 push: backup
-	git add .
-	git commit -m':robot: Autobackup'
+	cd ${TARGET_DIR}; \
+	git add .; \
+	git commit -m':robot: Autobackup'; \
 	git push origin develop
 
-env:
-    ifndef ZBX_URL
-        $(error ZBX_URL is undefined)
-    endif
-    ifndef ZBX_USER
-        $(error ZBX_USER is undefined)
-    endif
-    ifndef ZBX_PASSWORD
-        $(error ZBX_PASSWORD is undefined)
-    endif
+pull: zbx_env
+	cd ${TARGET_DIR}; \
+	git checkout develop; \
+	git pull
+
+zbx_env:
 
 prepare:
-	python -mpip install -r ./requirements.txt
+	python -mpip install -r ${ROOT_DIR}/requirements.txt
 
-backup: prepare
-	python ./backup.py --zabbix-url $(ZBX_URL) --zabbix-username $(ZBX_USER) --zabbix-password '$(ZBX_PASSWORD)'
+backup: prepare zbx_env
+	cd ${TARGET_DIR}; \
+	python ${ROOT_DIR}/backup.py --zabbix-url $(ZBX_URL) --zabbix-username $(ZBX_USER) --zabbix-password '$(ZBX_PASSWORD)'
