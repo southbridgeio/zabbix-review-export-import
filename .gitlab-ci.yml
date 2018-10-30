@@ -2,6 +2,8 @@
 #  CI_DEBUG_TRACE: "true"
 variables:
   GITLAB_TOKEN: $GITLAB_TOKEN
+    ZBX_USER: $ZBX_USER
+    ZBX_PASSWORD: $ZBX_PASSWORD
 
 .review: &review
   image: python:3.4
@@ -16,8 +18,6 @@ devops-zabbix:
     PROJECT: devops-zabbix-xml
     GROUP: scm
     ZBX_URL: $DEVOPS_ZBX_URL
-    ZBX_USER: $DEVOPS_ZBX_USER
-    ZBX_PASSWORD: $DEVOPS_ZBX_PASSWORD
   <<: *review
 
 #qa-zabbix:
