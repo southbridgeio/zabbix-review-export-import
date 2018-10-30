@@ -26,7 +26,7 @@ pull: zbx_env
 	cd ${TARGET_DIR}; \
 	git checkout -b develop origin/develop || git checkout develop; \
 	git pull; \
-	rm -rf *
+	rm -vrf *
 
 zbx_env:
 
