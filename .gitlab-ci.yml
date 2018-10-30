@@ -2,8 +2,8 @@
 #  CI_DEBUG_TRACE: "true"
 variables:
   GITLAB_TOKEN: $GITLAB_TOKEN
-    ZBX_USER: $ZBX_USER
-    ZBX_PASSWORD: $ZBX_PASSWORD
+  ZBX_USER: $ZBX_USER
+  ZBX_PASSWORD: $ZBX_PASSWORD
 
 .review: &review
   image: python:3.4
