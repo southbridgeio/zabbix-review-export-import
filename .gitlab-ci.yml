@@ -24,10 +24,10 @@ devops-zabbix:
     ZBX_URL: $DEVOPS_ZBX_URL
   <<: *review
 
-#qa-zabbix:
-#  variables:
-#    PROJECT: qa-zabbix-xml
-#    GROUP: scm
-#    ZBX_URL: $QA_ZBX_URL
-#  <<: *review
+qa-zabbix:
+  variables:
+    PROJECT: qa-zabbix-xml
+    GROUP: scm
+    ZBX_URL: $QA_ZBX_URL
+  <<: *review
 
