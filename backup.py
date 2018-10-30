@@ -32,7 +32,6 @@ def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
         zbx_pyzabbix.login(zbx_user, zbx_password)
         return zbx_pyzabbix
     except Exception as e:
-        zbx_pyzabbix = None
         logging.exception(e)
 
     # py-zabbix library, with user\password in ZabbixAPI
