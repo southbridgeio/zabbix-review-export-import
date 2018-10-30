@@ -9,6 +9,7 @@ variables:
 .review: &review
   image: python:3.4
   script:
+    - set
     - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GROUP/$PROJECT.git
     - make backup ZBX_URL=$ZBX_URL ZBX_USER=$ZBX_USER ZBX_PASSWORD='$ZBX_PASSWORD' TARGET_DIR=./$PROJECTNAME
   only:
