@@ -2,13 +2,14 @@
 #  CI_DEBUG_TRACE: "true"
 variables:
   GITLAB_TOKEN: $GITLAB_TOKEN
+  GITLAB_FQDN: $GITLAB_FQDN
   ZBX_USER: $ZBX_USER
   ZBX_PASSWORD: $ZBX_PASSWORD
 
 .review: &review
   image: python:3.4
   script:
-    - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_URL/$GROUP/$PROJECT.git
+    - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GROUP/$PROJECT.git
     - make backup ZBX_URL=$ZBX_URL ZBX_USER=$ZBX_USER ZBX_PASSWORD='$ZBX_PASSWORD' TARGET_DIR=./$PROJECTNAME
   only:
     - master
