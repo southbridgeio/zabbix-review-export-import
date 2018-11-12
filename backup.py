@@ -209,11 +209,11 @@ def main(zabbix_, save_yaml):
     logging.info("Start export JSON part...")
     logging.info("Processing action...")
     actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend')
-    dumps_json(folder='actions', data=actions)
+    dumps_json(folder='actions', data=actions, save_yaml=save_yaml)
 
     logging.info("Processing mediatypes...")
     mediatypes = zabbix_.mediatype.get(selectUsers='extend')
-    dumps_json(folder='mediatypes', data=mediatypes, key='description')
+    dumps_json(folder='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml)
 
 
 if __name__ == "__main__":
