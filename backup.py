@@ -195,6 +195,8 @@ def main(zabbix_, save_yaml):
             logging.info("Processing {}...".format(item[name]))
             txt = zabbix_.configuration.export(format='xml', options={type: [item[itemid]]})
             dump_xml(folder=type, txt=txt, name=item[name], save_yaml=save_yaml)
+    if yaml:
+        logging.info("Convert all format to yaml")
 
     logging.info("Start export XML part...")
     export(zabbix_.host, 'hosts', 'hostid', 'name')
