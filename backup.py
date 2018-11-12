@@ -132,7 +132,7 @@ def convert_to_object_without_none(txt):
     raw = remove_none(raw)
     represent_dict_order = lambda self, data: self.represent_mapping('tag:yaml.org,2002:map', data.items())  # noqa
     yaml.add_representer(OrderedDict, represent_dict_order)
-    txt = yaml.dump(raw)
+    txt = yaml.dump(raw, default_flow_style=False)
     return txt
 
 
