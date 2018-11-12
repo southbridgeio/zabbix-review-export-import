@@ -14,8 +14,6 @@ variables:
     - git config --global user.name "Zabbix Auto Backup"
     - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GROUP/$PROJECT.git
     - make ZBX_URL=$ZBX_URL ZBX_USER=$ZBX_USER ZBX_PASSWORD=$ZBX_PASSWORD TARGET_DIR=./$PROJECT SAVE_YAML=$SAVE_YAML
-  only:
-    - master
   when: manual
 
 devops-zabbix-xml:
