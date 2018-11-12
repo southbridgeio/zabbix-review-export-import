@@ -33,4 +33,4 @@ prepare:
 
 backup: prepare
 	cd ${TARGET_DIR}; \
-	python ${ROOT_DIR}/backup.py --zabbix-url $(ZBX_URL) --zabbix-username $(ZBX_USER) --zabbix-password '$(ZBX_PASSWORD)' $SAVE_YAML
+	python ${ROOT_DIR}/backup.py --zabbix-url $(ZBX_URL) --zabbix-username $(ZBX_USER) --zabbix-password '$(ZBX_PASSWORD)' ${SAVE_YAML}

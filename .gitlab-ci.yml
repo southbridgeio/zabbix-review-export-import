@@ -16,14 +16,14 @@ variables:
     - make ZBX_URL=$ZBX_URL ZBX_USER=$ZBX_USER ZBX_PASSWORD=$ZBX_PASSWORD TARGET_DIR=./$PROJECT SAVE_YAML=$SAVE_YAML
   when: manual
 
-devops-zabbix-xml:
+xml devops-zabbix:
   variables:
     PROJECT: devops-zabbix-xml
     GROUP: scm
     ZBX_URL: $DEVOPS_ZBX_URL
   <<: *review
 
-devops-zabbix-yaml:
+yaml devops-zabbix:
   variables:
     PROJECT: devops-zabbix-yaml
     GROUP: scm
@@ -31,7 +31,7 @@ devops-zabbix-yaml:
     SAVE_YAML: --save-yaml
   <<: *review
 
-qa-zabbix:
+xml qa-zabbix:
   variables:
     PROJECT: qa-zabbix-xml
     GROUP: scm
