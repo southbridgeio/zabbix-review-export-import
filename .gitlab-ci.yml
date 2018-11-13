@@ -14,14 +14,15 @@ variables:
     - git config --global user.name "Zabbix Auto Backup"
     - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GROUP/$PROJECT.git
     - make ZBX_URL=$ZBX_URL ZBX_USER=$ZBX_USER ZBX_PASSWORD=$ZBX_PASSWORD TARGET_DIR=./$PROJECT SAVE_YAML=$SAVE_YAML
+
+.review-manual: &review-manual
+  <<: *review
   when: manual
 
-XML devops-zabbix:
-  variables:
-    PROJECT: devops-zabbix-xml
-    GROUP: scm
-    ZBX_URL: $DEVOPS_ZBX_URL
+.review-schedules: &review-schedules
   <<: *review
+  only:
+    - schedules
 
 YAML devops-zabbix:
   variables:
@@ -29,12 +30,28 @@ YAML devops-zabbix:
     GROUP: scm
     ZBX_URL: $DEVOPS_ZBX_URL
     SAVE_YAML: --save-yaml
-  <<: *review
+  <<: *review-manual
+
+YAML SCHEDULE devops-zabbix:
+  variables:
+    PROJECT: devops-zabbix-yaml
+    GROUP: scm
+    ZBX_URL: $DEVOPS_ZBX_URL
+    SAVE_YAML: --save-yaml
+  <<: *review-schedules
+
+XML devops-zabbix:
+  variables:
+    PROJECT: devops-zabbix-xml
+    GROUP: scm
+    ZBX_URL: $DEVOPS_ZBX_URL
+  <<: *review-manual
+
 
 XML qa-zabbix:
   variables:
     PROJECT: qa-zabbix-xml
     GROUP: scm
     ZBX_URL: $QA_ZBX_URL
-  <<: *review
+  <<: *review-manual
 
