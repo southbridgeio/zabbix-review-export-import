@@ -40,18 +40,17 @@ YAML SCHEDULE devops-zabbix:
     SAVE_YAML: --save-yaml
   <<: *review-schedules
 
-XML devops-zabbix:
+XML SCHEDULE devops-zabbix:
   variables:
     PROJECT: devops-zabbix-xml
     GROUP: scm
     ZBX_URL: $DEVOPS_ZBX_URL
-  <<: *review-manual
+  <<: *review-schedules
 
-
-XML qa-zabbix:
+XML SCHEDULE qa-zabbix:
   variables:
     PROJECT: qa-zabbix-xml
     GROUP: scm
     ZBX_URL: $QA_ZBX_URL
-  <<: *review-manual
+  <<: *review-schedules
 
