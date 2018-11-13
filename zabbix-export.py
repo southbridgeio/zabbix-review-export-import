@@ -33,14 +33,9 @@ def remove_none(obj):
 
 def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
     """
-    Иногда на сервере или у разработчика могут быть разные версии библиотек-pip-модули: pyzabbix\py-zabbix
-    Но обе они имеют имя python-модуля pyzabbix, но немного различные интерфейсы
-    Функция автоматически определяет какая библиотека установлена
-        (точнее, пробует обе) и возвращает готовый объект ZabbixAPI
-    :param zbx_user:
-    :param zbx_password:
-    :param zbx_url:
-    :return:
+    Sometimes pyzabbix and py-zabbix library can replace each other.
+    This is a wrapper, we don't care about what pip-module we install.
+    Return ZabbixAPI object
     """
     # pyzabbix library, with user\password in login method. It's GOOD library
     logging.debug("Try connect to Zabbix by pyzabbix...")
@@ -65,24 +60,6 @@ def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
     raise Exception("Some error in pyzabbix or py_zabbix module, see logs")
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("--zabbix-url", action="store", required=True)
-    parser.add_argument("--zabbix-username", action="store", required=True)
-    parser.add_argument("--zabbix-password", action="store", required=True)
-
-    parser.add_argument("--save-yaml", action="store_true")
-
-    args = parser.parse_args()
-    return args
-
-
-def init_logging(level=logging.INFO):
-    logger_format_string = '%(levelname)-8s %(message)s'
-    logging.basicConfig(level=level, format=logger_format_string, stream=sys.stdout)
-
-
 def order_data(data):
     if isinstance(data, dict):
         for key, value in data.items():
@@ -94,18 +71,13 @@ def order_data(data):
         return data
 
 
-def dumps_json(folder, data, key='name', save_yaml=False):
+def dumps_json(object, data, directory, key='name', save_yaml=False):
     """
-    Создаёт JSON-файл в папке folder с содержимым из data (должен быть массивом!),
-    key имя свойства в элементе для создания файла
-    :param folder: Папка для сохранения
-    :param data: List
-    :param key:
-    :param save_yaml:
-    :return: None
+    Create JSON or yaml file in folder
     """
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    subfolder = os.path.join(directory, object)
+    if not os.path.exists(subfolder):
+        os.makedirs(subfolder)
 
     data = order_data(data)
 
@@ -115,7 +87,7 @@ def dumps_json(folder, data, key='name', save_yaml=False):
         # Убираем из имени лишние символы
         name = item[key]
         name = re.sub(r'[\\/:"*?<>|]+', ' ', name)
-        filename = '{}/{}.{}'.format(folder, name, 'yaml' if save_yaml else 'json')
+        filename = '{}/{}.{}'.format(subfolder, name, 'yaml' if save_yaml else 'json')
         filename = os.path.abspath(filename)
 
         logging.debug("Write to file '{}'".format(filename))
@@ -128,6 +100,10 @@ def dumps_json(folder, data, key='name', save_yaml=False):
 
 
 def convert_to_object_without_none(txt):
+    """
+    Convert any object to OrderDict without None value
+    """
+
     raw = anymarkup.parse(txt)
     raw = remove_none(raw)
     represent_dict_order = lambda self, data: self.represent_mapping('tag:yaml.org,2002:map', data.items())  # noqa
@@ -136,16 +112,11 @@ def convert_to_object_without_none(txt):
     return txt
 
 
-def dump_xml(folder, txt, name, save_yaml=False):
+def dump_xml(object, txt, name, directory, save_yaml=False):
     """
-    Создаёт XML-файл в папке folder с содержимым из text, файл name
-    key имя свойства в элементе для создания файла
-    :param folder: Папка для сохранения
-    :param txt:
-    :param name:
-    :param save_yaml:
-    :return: None
+    Create XML or YAML in folder
     """
+    folder = os.path.join(directory, object)
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -176,25 +147,21 @@ def dump_xml(folder, txt, name, save_yaml=False):
         file.write(txt)
 
 
-def main(zabbix_, save_yaml):
+def main(zabbix_, save_yaml, directory):
     # XML
     # Standart zabbix xml export via API
     def export(zabbix_api, type, itemid, name):
         """
         Export one type: hosts, template, screen or other
         https://www.zabbix.com/documentation/4.0/manual/api/reference/configuration/export
-        :param zabbix_api:
-        :param type:
-        :param itemid:
-        :param name:
-        :return:
         """
         logging.info("Export {}".format(type))
         items = zabbix_api.get()
         for item in items:
             logging.info("Processing {}...".format(item[name]))
             txt = zabbix_.configuration.export(format='xml', options={type: [item[itemid]]})
-            dump_xml(folder=type, txt=txt, name=item[name], save_yaml=save_yaml)
+            dump_xml(object=type, txt=txt, name=item[name], save_yaml=save_yaml, directory=directory)
+
     if yaml:
         logging.info("Convert all format to yaml")
 
@@ -207,15 +174,35 @@ def main(zabbix_, save_yaml):
     # JSON
     # not support `export` method
     # Read more in https://www.zabbix.com/documentation/4.0/manual/api/reference/configuration/export
-
     logging.info("Start export JSON part...")
     logging.info("Processing action...")
     actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend')
-    dumps_json(folder='actions', data=actions, save_yaml=save_yaml)
+    dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory)
 
     logging.info("Processing mediatypes...")
     mediatypes = zabbix_.mediatype.get(selectUsers='extend')
-    dumps_json(folder='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml)
+    dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--zabbix-url", action="store", required=True)
+    parser.add_argument("--zabbix-username", action="store", required=True)
+    parser.add_argument("--zabbix-password", action="store", required=True)
+
+    parser.add_argument("--directory", action="store", default='./',
+                        help="Directory where exported files will be saved")
+
+    parser.add_argument("--save-yaml", action="store_true", help="All file's formats will be converted to YAML format")
+
+    args = parser.parse_args()
+    return args
+
+
+def init_logging(level=logging.INFO):
+    logger_format_string = '%(levelname)-8s %(message)s'
+    logging.basicConfig(level=level, format=logger_format_string, stream=sys.stdout)
 
 
 if __name__ == "__main__":
@@ -224,4 +211,5 @@ if __name__ == "__main__":
 
     zabbix_ = get_zabbix_connection(args.zabbix_url, args.zabbix_username, args.zabbix_password)
 
-    main(zabbix_=zabbix_, save_yaml=args.save_yaml)
+    logging.info("All files will be save in {}".format(os.path.abspath(args.directory)))
+    main(zabbix_=zabbix_, save_yaml=args.save_yaml, directory=args.directory)
