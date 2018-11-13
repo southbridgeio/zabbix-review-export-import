@@ -45,7 +45,7 @@ XML devops-zabbix:
     PROJECT: devops-zabbix-xml
     GROUP: scm
     ZBX_URL: $DEVOPS_ZBX_URL
-  <<: *review-manual
+  <<: *review-schedules
 
 
 XML qa-zabbix:
@@ -53,5 +53,5 @@ XML qa-zabbix:
     PROJECT: qa-zabbix-xml
     GROUP: scm
     ZBX_URL: $QA_ZBX_URL
-  <<: *review-manual
+  <<: *review-schedules
 
