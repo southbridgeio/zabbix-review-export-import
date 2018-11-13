@@ -13,12 +13,12 @@ before_script:
   script:
     - git config --global user.email "you@example.com"
     - git config --global user.name "Zabbix Auto Backup"
-    - git clone 'https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GROUP/$PROJECT.git'
+    - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GROUP/$PROJECT.git
     - cd $PROJECT
     - git checkout -b develop origin/develop || git checkout develop
     - git pull
     - rm -vrf *
-    - python ../backup.py --zabbix-url $ZBX_URL --zabbix-username $ZBX_USER --zabbix-password '$(ZBX_PASSWORD)' $SAVE_YAML
+    - python ../zabbix-export.py --zabbix-url $ZBX_URL --zabbix-username $ZBX_USER --zabbix-password '$(ZBX_PASSWORD)' $SAVE_YAML
     - git add .
     - d=$(date +%Y-%m-%d)
     - "git commit -m':robot: Autobackup ${d}"
