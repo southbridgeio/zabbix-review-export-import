@@ -1,8 +1,8 @@
 variables:
 #  CI_DEBUG_TRACE: "true"
-  GITLAB_TOKEN: $GITLAB_TOKEN
-  GITLAB_FQDN: $GITLAB_FQDN
-  ZBX_USER: $ZBX_USER
+  GITLAB_TOKEN: $GITLAB_TOKEN # https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html
+  GITLAB_FQDN: $GITLAB_FQDN # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
+  ZBX_USER: $ZBX_USER # Zabbix user with admin privilege
   ZBX_PASSWORD: $ZBX_PASSWORD
 
 before_script:
@@ -13,12 +13,12 @@ before_script:
   script:
     - git config --global user.email "you@example.com"
     - git config --global user.name "Zabbix Auto Backup"
-    - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GROUP/$PROJECT.git
-    - cd $PROJECT
+    - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GITLAB_GROUP/$GITLAB_REPO.git
+    - cd $GITLAB_REPO
     - git checkout -b develop origin/develop || git checkout develop
     - git pull
     - rm -vrf *
-    - python ../zabbix-export.py --zabbix-url $ZBX_URL --zabbix-username $ZBX_USER --zabbix-password '$ZBX_PASSWORD' $SAVE_YAML
+    - python ../zabbix-export.py --zabbix-url $ZBX_URL --zabbix-username $ZBX_USER --zabbix-password $ZBX_PASSWORD $SAVE_YAML
     - git add .
     - d=$(date +%Y-%m-%d)
     - "git commit -m':robot: Autobackup ${d}"
@@ -34,33 +34,61 @@ before_script:
   only:
     - schedules
 
+#
+# You job for review and backup
+#
+# Example for you instance
+#YAML zabbix:
+#  variables:
+#    GITLAB_REPO: zabbix-yaml
+#    GITLAB_GROUP: GITLAB_GROUPname
+#    ZBX_URL: https://zabbix.examples.com
+#    SAVE_YAML: --save-yaml
+#  <<: *review-manual
+#
+#YAML SCHEDULE zabbix:
+#  variables:
+#    GITLAB_REPO: zabbix-yaml
+#    GITLAB_GROUP: GITLAB_GROUPname
+#    ZBX_URL: https://zabbix.examples.com
+#    SAVE_YAML: --save-yaml
+#  <<: *review-schedules
+#
+#XML SCHEDULE zabbix:
+#  variables:
+#    GITLAB_REPO: zabbix-yaml
+#    GITLAB_GROUP: GITLAB_GROUPname
+#    ZBX_URL: https://zabbix.examples.com
+#    SAVE_YAML: --save-yaml
+#  <<: *review-schedules
+
 YAML devops-zabbix:
   variables:
-    PROJECT: devops-zabbix-yaml
-    GROUP: scm
+    GITLAB_REPO: devops-zabbix-yaml
+    GITLAB_GROUP: scm
     ZBX_URL: $DEVOPS_ZBX_URL
     SAVE_YAML: --save-yaml
   <<: *review-manual
 
 YAML SCHEDULE devops-zabbix:
   variables:
-    PROJECT: devops-zabbix-yaml
-    GROUP: scm
+    GITLAB_REPO: devops-zabbix-yaml
+    GITLAB_GROUP: scm
     ZBX_URL: $DEVOPS_ZBX_URL
     SAVE_YAML: --save-yaml
   <<: *review-schedules
 
 XML SCHEDULE devops-zabbix:
   variables:
-    PROJECT: devops-zabbix-xml
-    GROUP: scm
+    GITLAB_REPO: devops-zabbix-xml
+    GITLAB_GROUP: scm
     ZBX_URL: $DEVOPS_ZBX_URL
   <<: *review-schedules
 
 XML SCHEDULE qa-zabbix:
   variables:
-    PROJECT: qa-zabbix-xml
-    GROUP: scm
+    GITLAB_REPO: qa-zabbix-xml
+    GITLAB_GROUP: scm
     ZBX_URL: $QA_ZBX_URL
   <<: *review-schedules
 
