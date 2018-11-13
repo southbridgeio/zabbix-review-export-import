@@ -33,14 +33,9 @@ def remove_none(obj):
 
 def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
     """
-    Иногда на сервере или у разработчика могут быть разные версии библиотек-pip-модули: pyzabbix\py-zabbix
-    Но обе они имеют имя python-модуля pyzabbix, но немного различные интерфейсы
-    Функция автоматически определяет какая библиотека установлена
-        (точнее, пробует обе) и возвращает готовый объект ZabbixAPI
-    :param zbx_user:
-    :param zbx_password:
-    :param zbx_url:
-    :return:
+    Sometimes pyzabbix and py-zabbix library can replace each other.
+    This is a wrapper, we don't care about what pip-module we install.
+    Return ZabbixAPI object
     """
     # pyzabbix library, with user\password in login method. It's GOOD library
     logging.debug("Try connect to Zabbix by pyzabbix...")
