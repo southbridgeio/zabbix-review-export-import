@@ -22,17 +22,15 @@ push: pull backup
 	git commit -m':robot: Autobackup ${d}'; \
 	git push origin develop
 
-pull: zbx_env
+pull:
 	cd ${TARGET_DIR}; \
 	git checkout -b develop origin/develop || git checkout develop; \
 	git pull; \
 	rm -vrf *
 
-zbx_env:
-
 prepare:
 	python -mpip install -r ${ROOT_DIR}/requirements.txt
 
-backup: prepare zbx_env
+backup: prepare
 	cd ${TARGET_DIR}; \
-	python ${ROOT_DIR}/backup.py --zabbix-url $(ZBX_URL) --zabbix-username $(ZBX_USER) --zabbix-password '$(ZBX_PASSWORD)'
+	python ${ROOT_DIR}/backup.py --zabbix-url $(ZBX_URL) --zabbix-username $(ZBX_USER) --zabbix-password '$(ZBX_PASSWORD)' ${SAVE_YAML}

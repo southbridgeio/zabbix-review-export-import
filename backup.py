@@ -7,10 +7,28 @@ import sys
 import xml.dom.minidom
 from collections import OrderedDict
 
+import anymarkup
 import urllib3
+import yaml
 from pyzabbix import ZabbixAPI
 
 urllib3.disable_warnings()
+
+
+def remove_none(obj):
+    """
+    Remove None value from any object
+    As is from https://stackoverflow.com/a/20558778/6753144
+    :param obj:
+    :return:
+    """
+    if isinstance(obj, (list, tuple, set)):
+        return type(obj)(remove_none(x) for x in obj if x is not None)
+    elif isinstance(obj, dict):
+        return type(obj)((remove_none(k), remove_none(v))
+                         for k, v in obj.items() if k is not None and v is not None)
+    else:
+        return obj
 
 
 def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
@@ -54,6 +72,8 @@ def parse_args():
     parser.add_argument("--zabbix-username", action="store", required=True)
     parser.add_argument("--zabbix-password", action="store", required=True)
 
+    parser.add_argument("--save-yaml", action="store_true")
+
     args = parser.parse_args()
     return args
 
@@ -74,13 +94,14 @@ def order_data(data):
         return data
 
 
-def dumps_json(folder, data, key='name'):
+def dumps_json(folder, data, key='name', save_yaml=False):
     """
     Создаёт JSON-файл в папке folder с содержимым из data (должен быть массивом!),
     key имя свойства в элементе для создания файла
     :param folder: Папка для сохранения
     :param data: List
     :param key:
+    :param save_yaml:
     :return: None
     """
     if not os.path.exists(folder):
@@ -94,21 +115,35 @@ def dumps_json(folder, data, key='name'):
         # Убираем из имени лишние символы
         name = item[key]
         name = re.sub(r'[\\/:"*?<>|]+', ' ', name)
-        filename = '{}/{}.json'.format(folder, name)
+        filename = '{}/{}.{}'.format(folder, name, 'yaml' if save_yaml else 'json')
         filename = os.path.abspath(filename)
 
         logging.debug("Write to file '{}'".format(filename))
+
+        if save_yaml:
+            txt = convert_to_object_without_none(txt)
+
         with open(filename, mode="w", encoding='utf-8', newline='\n') as file:
             file.write(txt)
 
 
-def dump_xml(folder, txt, name):
+def convert_to_object_without_none(txt):
+    raw = anymarkup.parse(txt)
+    raw = remove_none(raw)
+    represent_dict_order = lambda self, data: self.represent_mapping('tag:yaml.org,2002:map', data.items())  # noqa
+    yaml.add_representer(OrderedDict, represent_dict_order)
+    txt = yaml.dump(raw, default_flow_style=False, width=10000)
+    return txt
+
+
+def dump_xml(folder, txt, name, save_yaml=False):
     """
     Создаёт XML-файл в папке folder с содержимым из text, файл name
     key имя свойства в элементе для создания файла
     :param folder: Папка для сохранения
     :param txt:
     :param name:
+    :param save_yaml:
     :return: None
     """
     if not os.path.exists(folder):
@@ -116,7 +151,7 @@ def dump_xml(folder, txt, name):
 
     # Убираем из имени лишние символы
     name = re.sub(r'[\\/:"*?<>|]+', ' ', name)
-    filename = '{}/{}.xml'.format(folder, name)
+    filename = '{}/{}.{}'.format(folder, name, 'yaml' if save_yaml else 'xml')
     filename = os.path.abspath(filename)
 
     # Убираем из xml лишние строки
@@ -133,12 +168,15 @@ def dump_xml(folder, txt, name):
     # replace xml quot to normal readable "
     txt = txt.replace('&quot;', '"')
 
+    if save_yaml:
+        txt = convert_to_object_without_none(txt)
+
     logging.debug("Write to file '{}'".format(filename))
     with open(filename, mode="w", encoding='utf-8', newline='\n') as file:
         file.write(txt)
 
 
-def main(zabbix_):
+def main(zabbix_, save_yaml):
     # XML
     # Standart zabbix xml export via API
     def export(zabbix_api, type, itemid, name):
@@ -156,12 +194,14 @@ def main(zabbix_):
         for item in items:
             logging.info("Processing {}...".format(item[name]))
             txt = zabbix_.configuration.export(format='xml', options={type: [item[itemid]]})
-            dump_xml(folder=type, txt=txt, name=item[name])
+            dump_xml(folder=type, txt=txt, name=item[name], save_yaml=save_yaml)
+    if yaml:
+        logging.info("Convert all format to yaml")
 
     logging.info("Start export XML part...")
-    export(zabbix_.valuemap, 'valueMaps', 'valuemapid', 'name')
     export(zabbix_.host, 'hosts', 'hostid', 'name')
     export(zabbix_.template, 'templates', 'templateid', 'name')
+    export(zabbix_.valuemap, 'valueMaps', 'valuemapid', 'name')
     export(zabbix_.screen, 'screens', 'screenid', 'name')
 
     # JSON
@@ -171,11 +211,11 @@ def main(zabbix_):
     logging.info("Start export JSON part...")
     logging.info("Processing action...")
     actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend')
-    dumps_json(folder='actions', data=actions)
+    dumps_json(folder='actions', data=actions, save_yaml=save_yaml)
 
     logging.info("Processing mediatypes...")
     mediatypes = zabbix_.mediatype.get(selectUsers='extend')
-    dumps_json(folder='mediatypes', data=mediatypes, key='description')
+    dumps_json(folder='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml)
 
 
 if __name__ == "__main__":
@@ -184,4 +224,4 @@ if __name__ == "__main__":
 
     zabbix_ = get_zabbix_connection(args.zabbix_url, args.zabbix_username, args.zabbix_password)
 
-    main(zabbix_=zabbix_)
+    main(zabbix_=zabbix_, save_yaml=args.save_yaml)

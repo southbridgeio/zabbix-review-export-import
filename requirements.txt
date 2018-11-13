@@ -1,2 +1,4 @@
 pyzabbix
 requests
+pyyaml
+anymarkup
