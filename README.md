@@ -37,7 +37,7 @@ python ./zabbix-export.py --save-yaml --directory /home/username/path/to/zabbix-
 ```
 
 ## Make review
-If you want to make review (read more on habr.com: [RU], [EN translated]), use this sequence:
+If you want to make review (read more on habr.com: [RU](#), [EN translated](#)), use this sequence:
 1. Fork this repository to you GitLab account or instance (e.g. `groupname/zabbix-review-export`)
 2. Create repository where will be saved XML and YAML (e.g. two repository `groupname/zabbix-xml` and `groupname/zabbix-yaml`. And do first commit (create empty `README.md`)
 3. Create two branches in this repos: `master` and `develop`. In repository `groupname/zabbix-xml` set `develop` [default branch](https://docs.gitlab.com/ee/user/project/repository/branches/#default-branch).
