@@ -1,4 +1,4 @@
-# Zabbix XML Review and Export
+# Zabbix Review and Export
 Zabbix review and export (backup) can create review mechanism to zabbix configuration or only export (backup) all hosts templates and other object.
 
 - [Requirements](#requirements)
