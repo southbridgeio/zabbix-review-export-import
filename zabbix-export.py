@@ -84,7 +84,7 @@ def dumps_json(object, data, directory, key='name', save_yaml=False):
     for item in data:
         txt = json.dumps(item, indent=4)
 
-        # Убираем из имени лишние символы
+        # Remove bad characters from name
         name = item[key]
         name = re.sub(r'[\\/:"*?<>|]+', ' ', name)
         filename = '{}/{}.{}'.format(subfolder, name, 'yaml' if save_yaml else 'json')
@@ -120,15 +120,15 @@ def dump_xml(object, txt, name, directory, save_yaml=False):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    # Убираем из имени лишние символы
+    # Remove bad characters from name
     name = re.sub(r'[\\/:"*?<>|]+', ' ', name)
     filename = '{}/{}.{}'.format(folder, name, 'yaml' if save_yaml else 'xml')
     filename = os.path.abspath(filename)
 
-    # Убираем из xml лишние строки
+    # Remove bad lines from content
     # date
-    # zabbix.version
     txt = re.sub(r'<date>.*<\/date>', '', txt)
+    # zabbix.version
     # txt = re.sub(r'<version>.*<\/version>', '', txt)
 
     # ppretty xml
