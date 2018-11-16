@@ -13,7 +13,7 @@ Zabbix review and export (backup) can create review mechanism to zabbix configur
 - Installed [Python >=3.4](https://www.python.org/downloads/)
 
 
-If you want use [review](#make-review):
+If you want use [review (or Monitoring as Code](#make-review):
 - `git`
 - [GitLab](https://gitlab.com/) - you own instance with configured [GitLab CI](https://docs.gitlab.com/ee/ci/) or cloud account
 
@@ -38,7 +38,7 @@ python ./zabbix-export.py --save-yaml --directory /home/username/path/to/zabbix-
 ```
 
 ## Make review
-If you want to make review (read more on habr.com: [RU](#), [EN translated](#)), use this sequence:
+If you want to make review (Moniroting as Code). Read more on habr.com: [RU](#), [EN translated](#)
 1. Fork this repository to you GitLab account or instance (e.g. `groupname/zabbix-review-export`)
 2. Create repository where will be saved XML and YAML (e.g. two repository `groupname/zabbix-xml` and `groupname/zabbix-yaml`. And do first commit (create empty `README.md`)
 3. Create two branches in this repos: `master` and `develop`. In repository `groupname/zabbix-xml` set `develop` [default branch](https://docs.gitlab.com/ee/user/project/repository/branches/#default-branch).
@@ -47,7 +47,7 @@ If you want to make review (read more on habr.com: [RU](#), [EN translated](#)),
 6. Try to run manual job `YAML zabbix`
 7. Create merge request `develop=>master` in `zabbix-yaml`. For first time you can merge without review, it's too hard :)
 8. Configure [Schedule](https://docs.gitlab.com/ee/user/project/pipelines/schedules.html) (eg. every week)
-9. Change some host, template or other [supported objects](#supported-objects] in zabbix, run manual job and create merge request again. Enjoy!
+9. Change some host, template or other [supported objects](#supported-objects) in zabbix, run manual job and create merge request again. Enjoy!
 
 ### Notes
 Use two different repositories for XML+JSON (raw-format) and readable YAML format:
