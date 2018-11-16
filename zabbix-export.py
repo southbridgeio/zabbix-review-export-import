@@ -93,13 +93,13 @@ def dumps_json(object, data, directory, key='name', save_yaml=False):
         logging.debug("Write to file '{}'".format(filename))
 
         if save_yaml:
-            txt = convert_to_object_without_none(txt)
+            txt = convert_to_yaml_without_none(txt)
 
         with open(filename, mode="w", encoding='utf-8', newline='\n') as file:
             file.write(txt)
 
 
-def convert_to_object_without_none(txt):
+def convert_to_yaml_without_none(txt):
     """
     Convert any object to OrderDict without None value
     """
@@ -108,7 +108,7 @@ def convert_to_object_without_none(txt):
     raw = remove_none(raw)
     represent_dict_order = lambda self, data: self.represent_mapping('tag:yaml.org,2002:map', data.items())  # noqa
     yaml.add_representer(OrderedDict, represent_dict_order)
-    txt = yaml.dump(raw, default_flow_style=False, width=10000)
+    txt = yaml.dump(raw, default_flow_style=False, width=10000, allow_unicode=True)
     return txt
 
 
@@ -140,7 +140,7 @@ def dump_xml(object, txt, name, directory, save_yaml=False):
     txt = txt.replace('&quot;', '"')
 
     if save_yaml:
-        txt = convert_to_object_without_none(txt)
+        txt = convert_to_yaml_without_none(txt)
 
     logging.debug("Write to file '{}'".format(filename))
     with open(filename, mode="w", encoding='utf-8', newline='\n') as file:
