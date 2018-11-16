@@ -6,6 +6,7 @@ Zabbix review and export (backup) can create review mechanism to zabbix configur
 - [Make review](#make-review)
   - [Notes](#notes)
 - [Supported objects](#supported-objects)
+- [Known issues](#known-issues)
 - [Screenshots](#screenshots)
 
 # Requirements
@@ -66,6 +67,10 @@ Use standart [zabbix export functional](https://www.zabbix.com/documentation/4.0
 Representing objects as JSON using the API:
 - mediatypes
 - actions
+
+## Known issues
+- [ZBX-15175](https://support.zabbix.com/browse/ZBX-15175): Zabbix export - host's xml does not contain overrides or diff to templates (e.g. item's storage period, trigger.priority, trigger.status=disables\enabled)
+
 
 ## Screenshots
 YAML change action:
