@@ -1,7 +1,7 @@
 variables:
 #  CI_DEBUG_TRACE: "true"
   GITLAB_TOKEN: $GITLAB_TOKEN # https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html
-  GITLAB_FQDN: https://gitlab.southbridge.ru # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
+  GITLAB_FQDN: gitlab.southbridge.ru # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
   ZBX_USER: $ZBX_USER # Zabbix user with admin privilege
   ZBX_PASSWORD: $ZBX_PASSWORD
 
@@ -11,7 +11,7 @@ before_script:
 .review: &review
   image: python:3.6
   script:
-    - git config --global user.email "you@example.com"
+    - git config --global user.email "e.tereshkov@southbridge.ru"
     - git config --global user.name "Zabbix Auto Backup"
     - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GITLAB_GROUP/$GITLAB_REPO.git
     - cd $GITLAB_REPO
