@@ -11,7 +11,7 @@ before_script:
 
 .review: &review
   tags:
-    - docker
+    - dnd
   image: ubuntu:18.04
   script:
     - git config --global user.email "e.tereshkov@southbridge.ru"
