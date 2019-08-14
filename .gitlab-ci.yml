@@ -10,6 +10,8 @@ before_script:
   - python3 -mpip install --user -r requirements.txt
 
 .review: &review
+  tags:
+    - docker
   image: ubuntu:18.04
   script:
     - git config --global user.email "e.tereshkov@southbridge.ru"
