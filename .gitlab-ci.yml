@@ -1,7 +1,7 @@
 variables:
 #  CI_DEBUG_TRACE: "true"
   GITLAB_TOKEN: $GITLAB_TOKEN # https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html
-  GITLAB_FQDN: https://gitlab.southbridge.io # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
+  GITLAB_FQDN: https://gitlab.southbridge.ru # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
   ZBX_USER: $ZBX_USER # Zabbix user with admin privilege
   ZBX_PASSWORD: $ZBX_PASSWORD
 
