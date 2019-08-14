@@ -1,7 +1,7 @@
 variables:
 #  CI_DEBUG_TRACE: "true"
   GITLAB_TOKEN: $GITLAB_TOKEN # https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html
-  GITLAB_FQDN: $GITLAB_FQDN # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
+  GITLAB_FQDN: https://gitlab.southbridge.io # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
   ZBX_USER: $ZBX_USER # Zabbix user with admin privilege
   ZBX_PASSWORD: $ZBX_PASSWORD
 
@@ -38,57 +38,18 @@ before_script:
 # You job for review and backup
 #
 # Example for you instance
-#YAML zabbix:
-#  variables:
-#    GITLAB_REPO: zabbix-yaml
-#    GITLAB_GROUP: GITLAB_GROUPname
-#    ZBX_URL: https://zabbix.examples.com
-#    SAVE_YAML: --save-yaml
-#  <<: *review-manual
-#
-#YAML SCHEDULE zabbix:
-#  variables:
-#    GITLAB_REPO: zabbix-yaml
-#    GITLAB_GROUP: GITLAB_GROUPname
-#    ZBX_URL: https://zabbix.examples.com
-#    SAVE_YAML: --save-yaml
-#  <<: *review-schedules
-#
-#XML SCHEDULE zabbix:
-#  variables:
-#    GITLAB_REPO: zabbix-yaml
-#    GITLAB_GROUP: GITLAB_GROUPname
-#    ZBX_URL: https://zabbix.examples.com
-#    SAVE_YAML: --save-yaml
-#  <<: *review-schedules
+YAML zabbix4.2:
+ variables:
+   GITLAB_REPO: zabbix42-yaml
+   GITLAB_GROUP: e.tereshkov
+   ZBX_URL: https://zabbix42.southbridge.io
+   SAVE_YAML: --save-yaml
+ <<: *review-manual
 
-YAML devops-zabbix:
-  variables:
-    GITLAB_REPO: devops-zabbix-yaml
-    GITLAB_GROUP: scm
-    ZBX_URL: $DEVOPS_ZBX_URL
-    SAVE_YAML: --save-yaml
-  <<: *review-manual
-
-YAML SCHEDULE devops-zabbix:
-  variables:
-    GITLAB_REPO: devops-zabbix-yaml
-    GITLAB_GROUP: scm
-    ZBX_URL: $DEVOPS_ZBX_URL
-    SAVE_YAML: --save-yaml
-  <<: *review-schedules
-
-XML SCHEDULE devops-zabbix:
-  variables:
-    GITLAB_REPO: devops-zabbix-xml
-    GITLAB_GROUP: scm
-    ZBX_URL: $DEVOPS_ZBX_URL
-  <<: *review-schedules
-
-XML SCHEDULE qa-zabbix:
-  variables:
-    GITLAB_REPO: qa-zabbix-xml
-    GITLAB_GROUP: scm
-    ZBX_URL: $QA_ZBX_URL
-  <<: *review-schedules
-
+YAML SCHEDULE zabbix4.2:
+ variables:
+   GITLAB_REPO: zabbix42-yaml
+   GITLAB_GROUP: e.tereshkov
+   ZBX_URL: https://zabbix42.southbridge.io
+   SAVE_YAML: --save-yaml
+ <<: *review-schedules
