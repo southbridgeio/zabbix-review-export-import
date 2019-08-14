@@ -55,3 +55,19 @@ YAML SCHEDULE zabbix4.2:
    ZBX_URL: https://zabbix42.southbridge.io
    SAVE_YAML: --save-yaml
  <<: *review-schedules
+
+XML zabbix4.2:
+ variables:
+   GITLAB_REPO: zabbix42-xml
+   GITLAB_GROUP: e.tereshkov
+   ZBX_URL: https://zabbix42.southbridge.io
+   SAVE_YAML: ""
+ <<: *review-manual
+
+XML SCHEDULE zabbix4.2:
+ variables:
+   GITLAB_REPO: zabbix42-xml
+   GITLAB_GROUP: e.tereshkov
+   ZBX_URL: https://zabbix42.southbridge.io
+   SAVE_YAML: ""
+ <<: *review-schedules
