@@ -6,7 +6,7 @@ variables:
   ZBX_PASSWORD: $ZBX_PASSWORD
 
 before_script:
-  - python -mpip install -r requirements.txt
+  - python -mpip install --user -r requirements.txt
 
 .review: &review
   image: python:3.4
