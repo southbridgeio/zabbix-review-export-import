@@ -9,7 +9,7 @@ before_script:
   - python -mpip install --user -r requirements.txt
 
 .review: &review
-  image: python:3.4
+  image: python:3.6
   script:
     - git config --global user.email "you@example.com"
     - git config --global user.name "Zabbix Auto Backup"
