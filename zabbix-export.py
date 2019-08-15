@@ -167,6 +167,7 @@ def main(zabbix_, save_yaml, directory):
         logging.info("Convert all format to yaml")
 
     logging.info("Start export XML part...")
+    export (zabbix_.hostgroup, 'groups', 'groupid', 'name')
     export(zabbix_.host, 'hosts', 'hostid', 'name')
     export(zabbix_.template, 'templates', 'templateid', 'name')
     export(zabbix_.valuemap, 'valueMaps', 'valuemapid', 'name')
