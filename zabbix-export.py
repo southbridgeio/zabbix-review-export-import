@@ -186,9 +186,17 @@ def main(zabbix_, save_yaml, directory):
     mediatypes = zabbix_.mediatype.get()
     dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory)
 
-    logging.info ("Processing images...")
+    logging.info("Processing images...")
     images = zabbix_.image.get()
     dumps_json(object='images', data=images, save_yaml=save_yaml, directory=directory)
+
+    logging.info("Processing usergroups...")
+    usergroups = zabbix_.usergroup.get(selectRights='extend')
+    dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory)
+
+    logging.info("Processing users...")
+    users = zabbix_.user.get(selectMedias='extend', selectMediatypes='extend', selectUsrgrps='extend')
+    dumps_json(object='users', data=users, save_yaml=save_yaml, directory=directory)
 
 def parse_args():
     parser = argparse.ArgumentParser()
