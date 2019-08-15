@@ -179,7 +179,7 @@ def main(zabbix_, save_yaml, directory):
     # Read more in https://www.zabbix.com/documentation/4.0/manual/api/reference/configuration/export
     logging.info("Start export JSON part...")
     logging.info("Processing action...")
-    actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend')
+    actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend', selectRecoveryOperations='extend', selectAcknowledgeOperations='extend')
     dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory)
 
     logging.info("Processing mediatypes...")
