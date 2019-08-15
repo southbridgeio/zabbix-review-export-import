@@ -183,7 +183,7 @@ def main(zabbix_, save_yaml, directory):
     dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory)
 
     logging.info("Processing mediatypes...")
-    mediatypes = zabbix_.mediatype.get(selectUsers='extend')
+    mediatypes = zabbix_.mediatype.get()
     dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory)
 
 
