@@ -196,7 +196,19 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing users...")
     users = zabbix_.user.get(selectMedias='extend', selectMediatypes='extend', selectUsrgrps='extend')
-    dumps_json(object='users', data=users, save_yaml=save_yaml, directory=directory)
+    dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory)
+
+    logging.info("Processing proxy...")
+    proxys = zabbix_.proxy.get(selectInterface='extend')
+    dumps_json(object='proxy', data=proxys, key='host', save_yaml=save_yaml, directory=directory)
+
+    logging.info("Processing global macroses...")
+    global_macroses = zabbix_.usermacro.get(globalmacro='true')
+    dumps_json(object='globalmacro', data=global_macroses, key='macro', save_yaml=save_yaml, directory=directory)
+
+    logging.info("Processing user macroses...")
+    user_macroses = zabbix_.usermacro.get()
+    dumps_json(object='usermacro', data=user_macroses, key='macro', save_yaml=save_yaml, directory=directory)
 
 def parse_args():
     parser = argparse.ArgumentParser()
