@@ -172,6 +172,7 @@ def main(zabbix_, save_yaml, directory):
     export(zabbix_.template, 'templates', 'templateid', 'name')
     export(zabbix_.valuemap, 'valueMaps', 'valuemapid', 'name')
     export(zabbix_.screen, 'screens', 'screenid', 'name')
+    export(zabbix_.map, 'maps', 'sysmapid', 'name')
 
     # JSON
     # not support `export` method
