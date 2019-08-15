@@ -198,18 +198,22 @@ def parse_args():
 
     parser.add_argument("--save-yaml", action="store_true", help="All file's formats will be converted to YAML format")
 
+    parser.add_argument ("--debug", action="store_true", help="Show debug output")
+
     args = parser.parse_args()
     return args
 
 
-def init_logging(level=logging.INFO):
+def init_logging(level):
     logger_format_string = '%(levelname)-8s %(message)s'
     logging.basicConfig(level=level, format=logger_format_string, stream=sys.stdout)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    init_logging()
+    level=logging.INFO
+    if args.debug: level=logging.DEBUG
+    init_logging(level=level)
 
     zabbix_ = get_zabbix_connection(args.zabbix_url, args.zabbix_username, args.zabbix_password)
 
