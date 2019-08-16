@@ -215,6 +215,10 @@ def main(zabbix_, save_yaml, directory):
     user_macroses = zabbix_.usermacro.get()
     dumps_json(object='usermacro', data=user_macroses, key='macro', save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
 
+    logging.info("Processing services...")
+    services = zabbix_.service.get(selectParent='extend', selectTimes='extend')
+    dumps_json(object='services', data=services, save_yaml=save_yaml, directory=directory, drop_keys=["serviceid"])
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
