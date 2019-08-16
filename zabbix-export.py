@@ -189,7 +189,7 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing mediatypes...")
     mediatypes = zabbix_.mediatype.get()
-    dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeidmediatypeid"])
+    dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
 
     logging.info("Processing images...")
     images = zabbix_.image.get()
@@ -201,7 +201,7 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing users...")
     users = zabbix_.user.get(selectMedias='extend', selectMediatypes='extend', selectUsrgrps='extend')
-    dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory, drop_keys=["userid"])
+    dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory, drop_keys=["userid", "attempt_clock", "attempt_failed", "attempt_ip"])
 
     logging.info("Processing proxy...")
     proxys = zabbix_.proxy.get(selectInterface='extend')
@@ -217,7 +217,7 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing services...")
     services = zabbix_.service.get(selectParent='extend', selectTimes='extend')
-    dumps_json(object='services', data=services, save_yaml=save_yaml, directory=directory, drop_keys=["serviceid"])
+    dumps_json(object='services', data=services, save_yaml=save_yaml, directory=directory, drop_keys=["serviceid", "status"])
 
 def parse_args():
     parser = argparse.ArgumentParser()
