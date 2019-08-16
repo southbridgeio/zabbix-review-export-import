@@ -83,6 +83,7 @@ def dumps_json(object, data, directory, key='name', save_yaml=False):
     data = order_data(data)
 
     for item in data:
+        logging.debug("Processing {}...".format(item[key]))
         txt = json.dumps(item, indent=4)
 
         # Remove bad characters from name
@@ -159,7 +160,7 @@ def main(zabbix_, save_yaml, directory):
         logging.info("Export {}".format(type))
         items = zabbix_api.get()
         for item in items:
-            logging.info("Processing {}...".format(item[name]))
+            logging.debug("Processing {}...".format(item[name]))
             txt = zabbix_.configuration.export(format='xml', options={type: [item[itemid]]})
             dump_xml(object=type, txt=txt, name=item[name], save_yaml=save_yaml, directory=directory)
 
@@ -167,7 +168,7 @@ def main(zabbix_, save_yaml, directory):
         logging.info("Convert all format to yaml")
 
     logging.info("Start export XML part...")
-    export (zabbix_.hostgroup, 'groups', 'groupid', 'name')
+    export(zabbix_.hostgroup, 'groups', 'groupid', 'name')
     export(zabbix_.host, 'hosts', 'hostid', 'name')
     export(zabbix_.template, 'templates', 'templateid', 'name')
     export(zabbix_.valuemap, 'valueMaps', 'valuemapid', 'name')
