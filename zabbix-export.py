@@ -72,7 +72,7 @@ def order_data(data):
         return data
 
 
-def dumps_json(object, data, directory, key='name', save_yaml=False):
+def dumps_json(object, data, directory, key='name', save_yaml=False,drop_keys=[]):
     """
     Create JSON or yaml file in folder
     """
@@ -84,6 +84,10 @@ def dumps_json(object, data, directory, key='name', save_yaml=False):
 
     for item in data:
         logging.debug("Processing {}...".format(item[key]))
+        if drop_keys:
+            for drop_key in drop_keys:
+                if drop_key in item:
+                    del item[drop_key]
         txt = json.dumps(item, indent=4)
 
         # Remove bad characters from name
@@ -201,7 +205,7 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing proxy...")
     proxys = zabbix_.proxy.get(selectInterface='extend')
-    dumps_json(object='proxy', data=proxys, key='host', save_yaml=save_yaml, directory=directory)
+    dumps_json(object='proxy', data=proxys, key='host', save_yaml=save_yaml, directory=directory, drop_keys=["lastaccess"])
 
     logging.info("Processing global macroses...")
     global_macroses = zabbix_.usermacro.get(globalmacro='true')
