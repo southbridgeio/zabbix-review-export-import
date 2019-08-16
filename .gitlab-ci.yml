@@ -11,7 +11,7 @@ before_script:
 .review: &review
   tags:
     - dind
-  image: python:3.7
+  image: python:3
   script:
     - git config --global user.email "e.tereshkov@southbridge.ru"
     - git config --global user.name "Zabbix Auto Backup"
