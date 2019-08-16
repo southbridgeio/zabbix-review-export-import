@@ -185,35 +185,35 @@ def main(zabbix_, save_yaml, directory):
     logging.info("Start export JSON part...")
     logging.info("Processing action...")
     actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend', selectRecoveryOperations='extend', selectAcknowledgeOperations='extend')
-    dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory)
+    dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
 
     logging.info("Processing mediatypes...")
     mediatypes = zabbix_.mediatype.get()
-    dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory)
+    dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeidmediatypeid"])
 
     logging.info("Processing images...")
     images = zabbix_.image.get()
-    dumps_json(object='images', data=images, save_yaml=save_yaml, directory=directory)
+    dumps_json(object='images', data=images, save_yaml=save_yaml, directory=directory, drop_keys=["imageid"])
 
     logging.info("Processing usergroups...")
     usergroups = zabbix_.usergroup.get(selectRights='extend')
-    dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory)
+    dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory, drop_keys=["usrgrpid"])
 
     logging.info("Processing users...")
     users = zabbix_.user.get(selectMedias='extend', selectMediatypes='extend', selectUsrgrps='extend')
-    dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory)
+    dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory, drop_keys=["userid"])
 
     logging.info("Processing proxy...")
     proxys = zabbix_.proxy.get(selectInterface='extend')
-    dumps_json(object='proxy', data=proxys, key='host', save_yaml=save_yaml, directory=directory, drop_keys=["lastaccess"])
+    dumps_json(object='proxy', data=proxys, key='host', save_yaml=save_yaml, directory=directory, drop_keys=["lastaccess", "proxyid"])
 
     logging.info("Processing global macroses...")
     global_macroses = zabbix_.usermacro.get(globalmacro='true')
-    dumps_json(object='globalmacro', data=global_macroses, key='macro', save_yaml=save_yaml, directory=directory)
+    dumps_json(object='globalmacro', data=global_macroses, key='macro', save_yaml=save_yaml, directory=directory, drop_keys=["globalmacroid"])
 
     logging.info("Processing user macroses...")
     user_macroses = zabbix_.usermacro.get()
-    dumps_json(object='usermacro', data=user_macroses, key='macro', save_yaml=save_yaml, directory=directory)
+    dumps_json(object='usermacro', data=user_macroses, key='macro', save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
 
 def parse_args():
     parser = argparse.ArgumentParser()
