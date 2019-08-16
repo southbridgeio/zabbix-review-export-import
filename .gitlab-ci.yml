@@ -23,7 +23,7 @@ before_script:
     - python ../zabbix-export.py --zabbix-url $ZBX_URL --zabbix-username $ZBX_USER --zabbix-password $ZBX_PASSWORD $SAVE_YAML
     - git add .
     - d=$(date +%Y-%m-%d)
-    - "git commit -m':robot: Autobackup'"
+    - "git commit -m':robot: Autobackup' ||:"
     - git push origin develop
 
 
