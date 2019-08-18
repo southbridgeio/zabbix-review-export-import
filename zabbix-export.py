@@ -83,7 +83,8 @@ def dumps_json(object, data, directory, key='name', save_yaml=False,drop_keys=[]
     data = order_data(data)
 
     for item in data:
-        logging.debug("Processing {}...".format(item[key]))
+        if isinstance(key, tuple): logging.debug("Processing {}...".format(item[key[0]]))
+        else: logging.debug("Processing {}...".format(item[key]))
         if drop_keys:
             for drop_key in drop_keys:
                 if drop_key in item:
@@ -91,7 +92,10 @@ def dumps_json(object, data, directory, key='name', save_yaml=False,drop_keys=[]
         txt = json.dumps(item, indent=4)
 
         # Remove bad characters from name
-        name = item[key]
+        if isinstance(key, tuple):
+            name = "_".join(map(lambda x: item[x], key))
+        else:
+            name = item[key]
         name = re.sub(r'[\\/:"*?<>|]+', ' ', name)
         filename = '{}/{}.{}'.format(subfolder, name, 'yaml' if save_yaml else 'json')
         filename = os.path.abspath(filename)
@@ -213,7 +217,7 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing user macroses...")
     user_macroses = zabbix_.usermacro.get()
-    dumps_json(object='usermacro', data=user_macroses, key='macro', save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
+    dumps_json(object='usermacro', data=user_macroses, key=('macro', 'hostid'), save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
 
     logging.info("Processing services...")
     services = zabbix_.service.get(selectParent='extend', selectTimes='extend')
