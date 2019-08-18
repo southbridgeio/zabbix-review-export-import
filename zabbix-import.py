@@ -9,7 +9,7 @@ import urllib3
 urllib3.disable_warnings()
 import yaml
 
-from pyzabbix import ZabbixAPI
+from pyzabbix import ZabbixAPI, ZabbixAPIException
 from pprint import pprint
 
 def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
@@ -64,7 +64,11 @@ def guess_yaml_type(yml, xml_exported=False):
     return 'autoguess'
 
 def import_group(zabbix, yml):
-    zabbix.hostgroup.create(name=yml['groups']['group']['name'])
+    try:
+        zabbix.hostgroup.create(name=yml['groups']['group']['name'])
+    except ZabbixAPIException as e:
+        if not 'already exist' in str(e):
+            logging.error(e)
 
 def main(zabbix_, yaml_file, file_type):
     api_version = zabbix_.apiinfo.version()
