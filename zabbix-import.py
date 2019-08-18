@@ -63,6 +63,9 @@ def guess_yaml_type(yml, xml_exported=False):
         
     return 'autoguess'
 
+def import_group(zabbix, yml):
+    zabbix.hostgroup.create(name=yml['groups']['group']['name'])
+
 def main(zabbix_, yaml_file, file_type):
     api_version = zabbix_.apiinfo.version()
     logging.info('Destination Zabbix server version: {}'.format(api_version))
@@ -76,17 +79,24 @@ def main(zabbix_, yaml_file, file_type):
     if 'zabbix_export' in yml:
         logging.info('Loading from XML-exported YAML')
         xml_exported = True
-        if 'version' in yml['zabbix_export']:
-            logging.info('Source Zabbix server version: {}'.format(yml['zabbix_export']['version']))
+        yml = yml['zabbix_export']
+        if 'version' in yml:
+            logging.info('Source Zabbix server version: {}'.format(yml['version']))
     else:
         logging.info('Loading from JSON-exported/raw YAML')
     if file_type == 'autoguess':
-        if xml_exported: file_type = guess_yaml_type(yml['zabbix_export'], xml_exported=xml_exported)
+        if xml_exported: file_type = guess_yaml_type(yml, xml_exported=xml_exported)
         else: file_type = guess_yaml_type(yml, xml_exported=xml_exported)
         if file_type == 'autoguess':
             logging.error("Cant guess object type, exiting...")
             sys.exit(1)
         logging.info('Guessed file type: {}'.format(file_type))
+    if file_type == "group":
+        import_group(zabbix_, yml)
+    else:
+        logging.error("This file type not yet implemented, exiting...")
+        sys.exit(2)
+    logging.info("Done")
 
 def parse_args():
     "Return parsed CLI args"
