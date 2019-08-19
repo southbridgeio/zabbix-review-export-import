@@ -63,6 +63,32 @@ def guess_yaml_type(yml, xml_exported=False):
         
     return 'autoguess'
 
+def get_hostgroups_cache(zabbix):
+    "Returns dict groupname=>groupid or None on error"
+    result = zabbix.hostgroup.get(output=['groupid', 'name'])
+    logging.debug(pformat(result))
+    group2groupid = {}             # key: group name, value: groupid
+    for group in result:
+        group2groupid[group['name']] = group['groupid']
+    return group2groupid
+
+def get_template_cache(zabbix):
+    "Return dict templatename=>templateid or None on error"
+    result = zabbix.template.get(output=['templateid', 'name'])
+    logging.debug(pformat(result))
+    template2templateid = {} # key: template name, value: templateid
+    for template in result:
+        template2templateid[template['name']] = template['templateid']
+    return template2templateid
+
+def get_proxy_cache(zabbix):
+    "Return dict proxyname=>proxyid or None on error"
+    result = zabbix.proxy.get(output=["proxyid","host"])
+    proxy2proxyid = {}          # key: proxy name, value: proxyid
+    for proxy in result:
+        proxy2proxyid[proxy['host']] = proxy['proxyid']
+    return proxy2proxyid
+
 def import_group(zabbix, yml):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     result = None
@@ -92,18 +118,99 @@ def import_host(zabbix, yml):
     "Import host from YAML. Return created object, None on error, True if object already exists"
     result = None
     try:
+        # fill hostgroups cache:
+        group2groupid = get_hostgroups_cache(zabbix)
+
+        # fill templates cache:
+        template2templateid = get_template_cache(zabbix)
+
+        # fill proxy cache:
+        proxy2proxyid = get_proxy_cache(zabbix)
+
+        host = yml['hosts']['host']
+
+        # set groupid(s) for new template:
+        if isinstance(host['groups']['group'], dict):
+            groups = [{'groupid': group2groupid[host['groups']['group']['name']]}]
+        else:
+            groups = []
+            for group in host['groups']['group']:
+                groups.append({'groupid': group2groupid[host['groups']['group'][group]['name']]})
+
+        # set templateid(s) for linked template(s):
+        if 'templates' in host:
+            if isinstance(host['templates']['template'], dict):
+                linked_templates = [{'templateid': template2templateid[host['templates']['template']['name']]}]
+            else:
+                linked_templates = []
+                for t in host['templates']['template']:
+                    linked_templates.append({'templateid': template2templateid[host['templates']['template'][t]['name']]})
+        else:
+            linked_templates = ""
+
+        # set macroses for new template:
+        if 'macros' in host:
+            if isinstance(host['macros']['macro'], dict):
+                macroses = [{"macro": host['macros']['macro']['macro'], "value": host['macros']['macro']['value']}]
+            else:
+                macroses = []
+                for macro in host['macros']['macro']:
+                    macroses.append({
+                        "macro": macro['macro'],
+                        "value": macro['value'],
+                    })
+        else:
+            macroses = ""
+
+        # set interfaces for new host:
+        if 'interfaces' in host:
+            if isinstance(host['interfaces']['interface'], dict):
+                i = host['interfaces']['interface']
+                interfaces = [{
+                    "dns": i['dns'] if 'dns' in i else "",
+                    "ip": i['ip'],
+                    "main": i['default'],
+                    "port": i['port'],
+                    "type": i['type'],
+                    "useip": i['useip'],
+                    "bulk": i['bulk'],
+                }]
+            else:
+                interfaces = []
+                for i in host['interfaces']['interface']:
+                    interfaces.append({
+                        "dns": i['dns'] if 'dns' in i else "",
+                        "ip": i['ip'],
+                        "main": i['default'],
+                        "port": i['port'],
+                        "type": i['type'],
+                        "useip": i['useip'],
+                        "bulk": i['bulk'],
+                    })
+        else:
+            interfaces = ""
+
         result = zabbix.host.create({
-            "host": yml['hosts']['host']['host'],
-            "name": yml['hosts']['host']['name'],
-            "description": yml['hosts']['host']['description'] if 'description' in yml['hosts']['host'] else "",
-            "": ,
-            "": ,
-            "": ,
-            "": ,
-            "": ,
-            "": ,
-            "": ,
+            "host": host['host'],
+            "name": host['name'],
+            "description": host['description'] if 'description' in host else "",
+            "proxy_hostid": proxy2proxyid[host['proxy']['name']] if 'proxy' in host else 0,
+            "status": host['status'],
+            "tls_connect": host['tls_connect'] if 'tls_connect' in host else "",
+            "tls_accept": host['tls_accept'] if 'tls_accept' in host else "",
+            "tls_issuer": host['tls_issuer'] if 'tls_issuer' in host else "",
+            "tls_subject": host['tls_subject'] if 'tls_subject' in host else "",
+            "tls_psk_identity": host['tls_psk_identity'] if 'tls_psk_identity' in host else "",
+            "tls_psk": host['tls_psk'] if 'tls_psk' in host else "",
+            "interfaces": interfaces,
+            "macros": macroses,
+            "templates": linked_templates,
+            "groups": groups,
             })
+        # TBD/TODO/FIXME:
+        # - httptests
+        # - triggers
+        # - items
     except ZabbixAPIException as e:
         if 'already exists' in str(e):
             result = True
@@ -116,45 +223,38 @@ def import_template(zabbix, yml):
     result = None
     try:
         # fill hostgroups cache:
-        result = zabbix.hostgroup.get(output=['groupid', 'name'])
-        logging.debug(pformat(result))
-        group2groupid = {}             # key: group name, value: groupid
-        for group in result:
-            group2groupid[group['name']] = group['groupid']
+        group2groupid = get_hostgroups_cache(zabbix)
 
         # fill templates cache:
-        result = zabbix.template.get(output=['templateid', 'name'])
-        logging.debug(pformat(result))
-        template2templateid = {} # key: template name, value: templateid
-        for template in result:
-            template2templateid[template['name']] = template['templateid']
+        template2templateid = get_template_cache(zabbix)
 
+        new_template = yml['templates']['template']
         # set groupid(s) for new template:
-        if isinstance(yml['templates']['template']['groups']['group'], dict):
-            groups = [{'groupid': group2groupid[yml['templates']['template']['groups']['group']['name']]}]
+        if isinstance(new_template['groups']['group'], dict):
+            groups = [{'groupid': group2groupid[new_template['groups']['group']['name']]}]
         else:
             groups = []
-            for group in yml['templates']['template']['groups']['group']:
-                groups.append({'groupid': group2groupid[yml['templates']['template']['groups']['group'][group]['name']]})
+            for group in new_template['groups']['group']:
+                groups.append({'groupid': group2groupid[new_template['groups']['group'][group]['name']]})
 
         # set templateid(s) for linked template(s):
-        if 'templates' in yml['templates']['template']:
-            if isinstance(yml['templates']['template']['templates']['template'], dict):
-                templates = [{'templateid': template2templateid[yml['templates']['template']['templates']['template']['name']]}]
+        if 'templates' in new_template:
+            if isinstance(new_template['templates']['template'], dict):
+                linked_templates = [{'templateid': template2templateid[new_template['templates']['template']['name']]}]
             else:
-                templates = []
-                for template in yml['templates']['template']['templates']['template']:
-                    templates.append({'templateid': template2templateid[yml['templates']['template']['templates']['template'][template]['name']]})
+                linked_templates = []
+                for t in new_template['templates']['template']:
+                    linked_templates.append({'templateid': template2templateid[new_template['templates']['template'][t]['name']]})
         else:
-            templates = ""
+            linked_templates = ""
 
         # set macroses for new template:
-        if 'macros' in yml['templates']['template']:
-            if isinstance(yml['templates']['template']['macros']['macro'], dict):
-                macroses = [{"macro": yml['templates']['template']['macros']['macro']['macro'], "value": yml['templates']['template']['macros']['macro']['value']}]
+        if 'macros' in new_template:
+            if isinstance(new_template['macros']['macro'], dict):
+                macroses = [{"macro": new_template['macros']['macro']['macro'], "value": new_template['macros']['macro']['value']}]
             else:
                 macroses = []
-                for macro in yml['templates']['template']['macros']['macro']:
+                for macro in new_template['macros']['macro']:
                     macroses.append({
                         "macro": macro['macro'],
                         "value": macro['value'],
@@ -164,11 +264,11 @@ def import_template(zabbix, yml):
 
         # create template:
         result = zabbix.template.create({
-            "host": yml['templates']['template']['template'],
-            "name": yml['templates']['template']['name'],
-            "description": yml['templates']['template']['description'] if 'description' in yml['templates']['template'] else "",
+            "host": new_template['template'],
+            "name": new_template['name'],
+            "description": new_template['description'] if 'description' in new_template else "",
             "groups": groups,
-            "templates": templates,
+            "templates": linked_templates,
             "macros": macroses,
         })
         logging.debug(pformat(result))
