@@ -109,7 +109,7 @@ def import_template(zabbix, yml):
             else:
                 templates = []
                 for template in yml['templates']['template']['templates']['template']:
-                    templates.append({'templateid': template2templateid[]yml['templates']['template']['templates']['template'][template]['name']})
+                    templates.append({'templateid': template2templateid[yml['templates']['template']['templates']['template'][template]['name']]})
         else:
             templates = ""
 
@@ -120,8 +120,13 @@ def import_template(zabbix, yml):
             else:
                 macroses = []
                 for macro in yml['templates']['template']['macros']['macro']:
-                    macroses.append({"macro": yml['templates']['template']['macros']['macro'][macro]['macro'], "value": yml['templates']['template']['macros']['macro'][macro]['value']})
-                
+                    macroses.append({
+                        "macro": macro['macro'],
+                        "value": macro['value'],
+                    })
+        else:
+            macroses = ""
+
         # create template:
         result = zabbix.template.create({
             "host": yml['templates']['template']['template'],
@@ -129,19 +134,21 @@ def import_template(zabbix, yml):
             "description": yml['templates']['template']['description'] if 'description' in yml['templates']['template'] else "",
             "groups": groups,
             "templates": templates,
-            "macros": , macroses,
+            "macros": macroses,
         })
         logging.debug(pformat(result))
         # FIXME/TBD/TODO:
         # - items
         # - triggers
         # - discovery_rules
-        # - applications
+        # - applications?
+        # - graphs
+        # - screens
     except ZabbixAPIException as e:
         if 'already exist' in str(e):
             result = True
         else:
-            logging.error(e)
+            logging.exception(e)
     return result
 
 def main(zabbix_, yaml_file, file_type):
@@ -176,16 +183,16 @@ def main(zabbix_, yaml_file, file_type):
         if file_type == "group":
             op_result = import_group(zabbix_, yml)
         elif file_type == "template":
-            op_result = import_template(zabbix, yml)
+            op_result = import_template(zabbix_, yml)
         else:
             logging.error("This file type not yet implemented, exiting...")
             sys.exit(2)
     except Exception as e:
-        logging.error(pformat(e))
+        logging.exception(pformat(e))
     if op_result:
         logging.info("Done")
     else:
-        logging.error("Failed")
+        logging.error("Operation failed")
         sys.exit(3)
 
 def parse_args():
