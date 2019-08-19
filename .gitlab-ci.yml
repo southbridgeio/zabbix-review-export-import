@@ -6,7 +6,11 @@ variables:
   ZBX_PASSWORD: $ZBX_PASSWORD
 
 before_script:
+  - date
   - python -m pip install --user -r requirements.txt
+
+after_script:
+  - date
 
 .review: &review
   tags:
