@@ -220,8 +220,8 @@ def main(zabbix_, save_yaml, directory):
     dumps_json(object='usermacro', data=user_macroses, key=('macro', 'hostid'), save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
 
     logging.info("Processing services...")
-    services = zabbix_.service.get(selectParent='extend', selectTimes='extend')
-    dumps_json(object='services', data=services, save_yaml=save_yaml, directory=directory, drop_keys=["serviceid", "status"])
+    services = zabbix_.service.get(selectParent=['name'], selectTimes='extend')
+    dumps_json(object='services', data=services, key=('name', 'serviceid'), save_yaml=save_yaml, directory=directory, drop_keys=["status"])
 
     logging.info("Processing maintenances...")
     maintenances = zabbix_.maintenance.get(selectGroups=['name'], selectHosts=["name"], selectTimeperiods='extend')
