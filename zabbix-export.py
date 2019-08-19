@@ -224,7 +224,7 @@ def main(zabbix_, save_yaml, directory):
     dumps_json(object='services', data=services, save_yaml=save_yaml, directory=directory, drop_keys=["serviceid", "status"])
 
     logging.info("Processing maintenances...")
-    maintenances = zabbix_.maintenance.get(selectGroups='extend', selectHosts='extend', selectTimeperiods='extend')
+    maintenances = zabbix_.maintenance.get(selectGroups=['name'], selectHosts=["name"], selectTimeperiods='extend')
     dumps_json(object='maintenances', data=maintenances, save_yaml=save_yaml, directory=directory, drop_keys=["maintenanceid"])
 
 def parse_args():
