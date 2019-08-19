@@ -10,7 +10,7 @@ urllib3.disable_warnings()
 import yaml
 
 from pyzabbix import ZabbixAPI, ZabbixAPIException
-from pprint import pprint
+from pprint import pprint, pformat
 
 def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
     """
@@ -64,11 +64,80 @@ def guess_yaml_type(yml, xml_exported=False):
     return 'autoguess'
 
 def import_group(zabbix, yml):
+    "Import hostgroup from YAML. Return created object or None on error"
+    result = None
     try:
-        zabbix.hostgroup.create(name=yml['groups']['group']['name'])
+        result = zabbix.hostgroup.create(name=yml['groups']['group']['name'])
+        logging.debug(pformat(result))
     except ZabbixAPIException as e:
-        if not 'already exist' in str(e):
+        if 'already exist' in str(e):
+            result = True
+        else:
             logging.error(e)
+    return result
+
+def import_template(zabbix, yml):
+    "Import template from YAML. Return created object or None on error"
+    result = None
+    try:
+        # fill hostgroups cache:
+        result = zabbix.hostgroup.get(output=['groupid', 'name'])
+        logging.debug(pformat(result))
+        group2groupid = {}             # key: group name, value: groupid
+        for group in result:
+            group2groupid[group['name']] = group['groupid']
+
+        # fill templates cache:
+        result = zabbix.template.get(output=['templateid', 'name'])
+        logging.debug(pformat(result))
+        template2templateid = {} # key: template name, value: templateid
+        for template in result:
+            template2templateid[template['name']] = template['templateid']
+
+        # set groupid(s) for new template:
+        if isinstance(yml['templates']['template']['groups']['group'], dict):
+            groups = [{'groupid': group2groupid[yml['templates']['template']['groups']['group']['name']]}]
+        else:
+            groups = []
+            for group in yml['templates']['template']['groups']['group']:
+                groups.append({'groupid': group2groupid[yml['templates']['template']['groups']['group'][group]['name']]})
+
+        # set templateid(s) for linked template(s):
+        if 'templates' in yml['templates']['template']:
+            if isinstance(yml['templates']['template']['templates']['template'], dict):
+                templates = [{'templateid': template2templateid[yml['templates']['template']['templates']['template']['name']]}]
+            else:
+                templates = []
+                for template in yml['templates']['template']['templates']['template']:
+                    templates.append({'templateid': template2templateid[]yml['templates']['template']['templates']['template'][template]['name']})
+        else:
+            templates = ""
+
+        # set macroses for new template:
+        if 'macros' in yml['templates']['template']:
+            if isinstance(yml['templates']['template']['macros']['macro'], dict):
+                macroses = [{"macro": yml['templates']['template']['macros']['macro']['macro'], "value": yml['templates']['template']['macros']['macro']['value']}]
+            else:
+                macroses = []
+                for macro in yml['templates']['template']['macros']['macro']:
+                    macroses.append({"macro": yml['templates']['template']['macros']['macro'][macro]['macro'], "value": yml['templates']['template']['macros']['macro'][macro]['value']})
+                
+        # create template:
+        result = zabbix.template.create({
+            "host": yml['templates']['template']['template'],
+            "name": yml['templates']['template']['name'],
+            "description": yml['templates']['template']['description'] if 'description' in yml['templates']['template'] else "",
+            "groups": groups,
+            "templates": templates,
+            "macros": , macroses,
+        })
+        logging.debug(pformat(result))
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            logging.error(e)
+    return result
 
 def main(zabbix_, yaml_file, file_type):
     api_version = zabbix_.apiinfo.version()
@@ -79,7 +148,8 @@ def main(zabbix_, yaml_file, file_type):
     logging.debug('Got following YAML: {}'.format(yml))
 
     xml_exported = False
-    
+    op_result = None
+
     if 'zabbix_export' in yml:
         logging.info('Loading from XML-exported YAML')
         xml_exported = True
@@ -88,6 +158,7 @@ def main(zabbix_, yaml_file, file_type):
             logging.info('Source Zabbix server version: {}'.format(yml['version']))
     else:
         logging.info('Loading from JSON-exported/raw YAML')
+
     if file_type == 'autoguess':
         if xml_exported: file_type = guess_yaml_type(yml, xml_exported=xml_exported)
         else: file_type = guess_yaml_type(yml, xml_exported=xml_exported)
@@ -95,12 +166,22 @@ def main(zabbix_, yaml_file, file_type):
             logging.error("Cant guess object type, exiting...")
             sys.exit(1)
         logging.info('Guessed file type: {}'.format(file_type))
-    if file_type == "group":
-        import_group(zabbix_, yml)
+
+    try:
+        if file_type == "group":
+            op_result = import_group(zabbix_, yml)
+        elif file_type == "template":
+            op_result = import_template(zabbix, yml)
+        else:
+            logging.error("This file type not yet implemented, exiting...")
+            sys.exit(2)
+    except Exception as e:
+        logging.error(pformat(e))
+    if op_result:
+        logging.info("Done")
     else:
-        logging.error("This file type not yet implemented, exiting...")
-        sys.exit(2)
-    logging.info("Done")
+        logging.error("Failed")
+        sys.exit(3)
 
 def parse_args():
     "Return parsed CLI args"
