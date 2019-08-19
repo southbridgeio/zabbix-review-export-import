@@ -76,6 +76,18 @@ def import_group(zabbix, yml):
             logging.error(e)
     return result
 
+def import_proxy(zabbix, yml):
+    "Import proxy form YAML. Return created object or None on error"
+    result = None
+    try:
+        result = zabbix.proxy.create(host=yml['host'], status=yml['status'], description=yml['description'], tls_accept=yml['tls_accept'], tls_connect=yml['tls_connect'], tls_issuer=yml['tls_issuer'], tls_psk=yml['tls_psk'], tls_psk_identity=yml['tls_psk_identity'], tls_subject=yml['tls_subject'])
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            logging.error(e)
+    return result
+
 def import_template(zabbix, yml):
     "Import template from YAML. Return created object or None on error"
     result = None
@@ -184,6 +196,8 @@ def main(zabbix_, yaml_file, file_type):
             op_result = import_group(zabbix_, yml)
         elif file_type == "template":
             op_result = import_template(zabbix_, yml)
+        elif file_type == "proxy":
+            op_result = import_proxy(zabbix_, yml)
         else:
             logging.error("This file type not yet implemented, exiting...")
             sys.exit(2)
