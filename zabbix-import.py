@@ -64,7 +64,7 @@ def guess_yaml_type(yml, xml_exported=False):
     return 'autoguess'
 
 def import_group(zabbix, yml):
-    "Import hostgroup from YAML. Return created object or None on error"
+    "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     result = None
     try:
         result = zabbix.hostgroup.create(name=yml['groups']['group']['name'])
@@ -77,7 +77,7 @@ def import_group(zabbix, yml):
     return result
 
 def import_proxy(zabbix, yml):
-    "Import proxy form YAML. Return created object or None on error"
+    "Import proxy form YAML. Return created object, None on error, True if object already exists"
     result = None
     try:
         result = zabbix.proxy.create(host=yml['host'], status=yml['status'], description=yml['description'], tls_accept=yml['tls_accept'], tls_connect=yml['tls_connect'], tls_issuer=yml['tls_issuer'], tls_psk=yml['tls_psk'], tls_psk_identity=yml['tls_psk_identity'], tls_subject=yml['tls_subject'])
@@ -88,8 +88,31 @@ def import_proxy(zabbix, yml):
             logging.error(e)
     return result
 
+def import_host(zabbix, yml):
+    "Import host from YAML. Return created object, None on error, True if object already exists"
+    result = None
+    try:
+        result = zabbix.host.create({
+            "host": yml['hosts']['host']['host'],
+            "name": yml['hosts']['host']['name'],
+            "description": yml['hosts']['host']['description'] if 'description' in yml['hosts']['host'] else "",
+            "": ,
+            "": ,
+            "": ,
+            "": ,
+            "": ,
+            "": ,
+            "": ,
+            })
+    except ZabbixAPIException as e:
+        if 'already exists' in str(e):
+            result = True
+        else:
+            logging.error(e)
+    return result
+
 def import_template(zabbix, yml):
-    "Import template from YAML. Return created object or None on error"
+    "Import template from YAML. Return created object, None on error, True if object already exists"
     result = None
     try:
         # fill hostgroups cache:
@@ -198,6 +221,8 @@ def main(zabbix_, yaml_file, file_type):
             op_result = import_template(zabbix_, yml)
         elif file_type == "proxy":
             op_result = import_proxy(zabbix_, yml)
+        elif file_type == "host":
+            op_result = import_host(zabbix_, yml)
         else:
             logging.error("This file type not yet implemented, exiting...")
             sys.exit(2)
