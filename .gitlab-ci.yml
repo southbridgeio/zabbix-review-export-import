@@ -2,7 +2,7 @@ variables:
 #  CI_DEBUG_TRACE: "true"
   GITLAB_TOKEN: $GITLAB_TOKEN # https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html
   GITLAB_FQDN: gitlab.southbridge.ru # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
-  ZBX_USER: $ZBX_USER # Zabbix user with admin privilege
+  ZABBIX_USERNAME: $ZBX_USER # Zabbix user with admin privilege
   ZABBIX_PASSWORD: $ZBX_PASSWORD
 
 before_script:
@@ -24,7 +24,7 @@ after_script:
     - git checkout -b develop origin/develop || git checkout develop
     - git pull
     - rm -vrf *
-    - python ../zabbix-export.py --zabbix-url $ZBX_URL --zabbix-username $ZBX_USER $SAVE_YAML
+    - python ../zabbix-export.py $SAVE_YAML
     - git add .
     - d=$(date +%Y-%m-%d)
     - "git commit -m':robot: Autobackup' ||:"
@@ -48,7 +48,7 @@ YAML zabbix4.2:
  variables:
    GITLAB_REPO: zabbix42-yaml
    GITLAB_GROUP: e.tereshkov
-   ZBX_URL: https://zabbix42.southbridge.io
+   ZABBIX_URL: https://zabbix42.southbridge.io
    SAVE_YAML: --save-yaml
  <<: *review-manual
 
@@ -56,7 +56,7 @@ YAML SCHEDULE zabbix4.2:
  variables:
    GITLAB_REPO: zabbix42-yaml
    GITLAB_GROUP: e.tereshkov
-   ZBX_URL: https://zabbix42.southbridge.io
+   ZABBIX_URL: https://zabbix42.southbridge.io
    SAVE_YAML: --save-yaml
  <<: *review-schedules
 
@@ -64,7 +64,7 @@ XML zabbix4.2:
  variables:
    GITLAB_REPO: zabbix42-xml
    GITLAB_GROUP: e.tereshkov
-   ZBX_URL: https://zabbix42.southbridge.io
+   ZABBIX_URL: https://zabbix42.southbridge.io
    SAVE_YAML: ""
  <<: *review-manual
 
@@ -72,7 +72,7 @@ XML SCHEDULE zabbix4.2:
  variables:
    GITLAB_REPO: zabbix42-xml
    GITLAB_GROUP: e.tereshkov
-   ZBX_URL: https://zabbix42.southbridge.io
+   ZABBIX_URL: https://zabbix42.southbridge.io
    SAVE_YAML: ""
  <<: *review-schedules
 
@@ -80,7 +80,7 @@ YAML zabbix3.4:
  variables:
    GITLAB_REPO: zabbix34-yaml
    GITLAB_GROUP: e.tereshkov
-   ZBX_URL: https://zabbix.southbridge.io
+   ZABBIX_URL: https://zabbix.southbridge.io
    SAVE_YAML: --save-yaml
  <<: *review-manual
 
@@ -88,7 +88,7 @@ YAML SCHEDULE zabbix3.4:
  variables:
    GITLAB_REPO: zabbix34-yaml
    GITLAB_GROUP: e.tereshkov
-   ZBX_URL: https://zabbix.southbridge.io
+   ZABBIX_URL: https://zabbix.southbridge.io
    SAVE_YAML: --save-yaml
  <<: *review-schedules
 
@@ -96,7 +96,7 @@ XML zabbix3.4:
  variables:
    GITLAB_REPO: zabbix34-xml
    GITLAB_GROUP: e.tereshkov
-   ZBX_URL: https://zabbix.southbridge.io
+   ZABBIX_URL: https://zabbix.southbridge.io
    SAVE_YAML: ""
  <<: *review-manual
 
@@ -104,6 +104,6 @@ XML SCHEDULE zabbix3.4:
  variables:
    GITLAB_REPO: zabbix34-xml
    GITLAB_GROUP: e.tereshkov
-   ZBX_URL: https://zabbix.southbridge.io
+   ZABBIX_URL: https://zabbix.southbridge.io
    SAVE_YAML: ""
  <<: *review-schedules
