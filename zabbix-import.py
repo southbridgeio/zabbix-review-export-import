@@ -135,7 +135,7 @@ def import_host(zabbix, yml):
         else:
             groups = []
             for group in host['groups']['group']:
-                groups.append({'groupid': group2groupid[host['groups']['group'][group]['name']]})
+                groups.append({'groupid': group2groupid[group['name']]})
 
         # set templateid(s) for linked template(s):
         if 'templates' in host:
@@ -144,7 +144,7 @@ def import_host(zabbix, yml):
             else:
                 linked_templates = []
                 for t in host['templates']['template']:
-                    linked_templates.append({'templateid': template2templateid[host['templates']['template'][t]['name']]})
+                    linked_templates.append({'templateid': template2templateid[t['name']]})
         else:
             linked_templates = ""
 
