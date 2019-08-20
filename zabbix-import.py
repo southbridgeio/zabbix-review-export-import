@@ -346,11 +346,29 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Import Zabbix object from YAML dump")
     parser.add_argument ("--debug", action="store_true", help="Show debug output")
 
-    parser.add_argument("--zabbix-url", action="store", **environ_or_required('ZABBIX_URL'))
-    parser.add_argument("--zabbix-username", action="store", **environ_or_required('ZABBIX_USERNAME'))
-    parser.add_argument("--zabbix-password", action="store", **environ_or_required('ZABBIX_PASSWORD'))
+    parser.add_argument("--zabbix-url", action="store", help="REQUIRED. May be in ZABBIX_URL env var", **environ_or_required('ZABBIX_URL'))
+    parser.add_argument("--zabbix-username", action="store", help="REQUIRED. May be in ZABBIX_USERNAME env var", **environ_or_required('ZABBIX_USERNAME'))
+    parser.add_argument("--zabbix-password", action="store", help="REQUIRED. May be in ZABBIX_PASSWORD env var", **environ_or_required('ZABBIX_PASSWORD'))
 
-    parser.add_argument("--type", choices=["autoguess", "host", "group", "template", "valuemap", "screen", "map", "service", "maintenance", "user", "mediatype", "usergroup", "action", "usermacro", "proxy", "image", "globalmacro"], default="autoguess", help="Zabbix object type, default is %(default)s")
+    parser.add_argument("--type", choices=[
+        "autoguess",
+        "host",
+        "group",
+        "template",
+        "valuemap",
+        "screen",
+        "map",
+        "service",
+        "maintenance",
+        "user",
+        "mediatype",
+        "usergroup",
+        "action",
+        "usermacro",
+        "proxy",
+        "image",
+        "globalmacro"
+    ], default="autoguess", help="Zabbix object type, default is %(default)s")
     parser.add_argument("FILE", help="YAML file to import from")
 
     args = parser.parse_args()
