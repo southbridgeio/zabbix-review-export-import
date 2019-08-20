@@ -290,7 +290,7 @@ def import_template(zabbix, yml):
 
 def main(zabbix_, yaml_file, file_type):
     api_version = zabbix_.apiinfo.version()
-    logging.info('Destination Zabbix server version: {}'.format(api_version))
+    logging.debug('Destination Zabbix server version: {}'.format(api_version))
 
     with open(yaml_file, 'r') as f:
         yml = yaml.safe_load(f)
@@ -300,13 +300,13 @@ def main(zabbix_, yaml_file, file_type):
     op_result = None
 
     if 'zabbix_export' in yml:
-        logging.info('Loading from XML-exported YAML')
+        logging.debug('Loading from XML-exported YAML')
         xml_exported = True
         yml = yml['zabbix_export']
         if 'version' in yml:
-            logging.info('Source Zabbix server version: {}'.format(yml['version']))
+            logging.debug('Source Zabbix server version: {}'.format(yml['version']))
     else:
-        logging.info('Loading from JSON-exported/raw YAML')
+        logging.debug('Loading from JSON-exported/raw YAML')
 
     if file_type == 'autoguess':
         if xml_exported: file_type = guess_yaml_type(yml, xml_exported=xml_exported)
@@ -391,5 +391,5 @@ if __name__ == "__main__":
 
     zabbix_ = get_zabbix_connection(args.zabbix_url, args.zabbix_username, args.zabbix_password)
 
-    logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(args.FILE)))
+    logging.debug("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(args.FILE)))
     main(zabbix_=zabbix_, yaml_file=args.FILE, file_type=args.type)
