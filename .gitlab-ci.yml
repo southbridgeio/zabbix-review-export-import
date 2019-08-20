@@ -3,7 +3,7 @@ variables:
   GITLAB_TOKEN: $GITLAB_TOKEN # https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html
   GITLAB_FQDN: gitlab.southbridge.ru # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
   ZBX_USER: $ZBX_USER # Zabbix user with admin privilege
-  ZBX_PASSWORD: $ZBX_PASSWORD
+  ZABBIX_PASSWORD: $ZBX_PASSWORD
 
 before_script:
   - date
@@ -24,7 +24,7 @@ after_script:
     - git checkout -b develop origin/develop || git checkout develop
     - git pull
     - rm -vrf *
-    - python ../zabbix-export.py --zabbix-url $ZBX_URL --zabbix-username $ZBX_USER --zabbix-password $ZBX_PASSWORD $SAVE_YAML
+    - python ../zabbix-export.py --zabbix-url $ZBX_URL --zabbix-username $ZBX_USER $SAVE_YAML
     - git add .
     - d=$(date +%Y-%m-%d)
     - "git commit -m':robot: Autobackup' ||:"
