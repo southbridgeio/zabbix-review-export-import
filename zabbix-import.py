@@ -330,7 +330,9 @@ def main(zabbix_, yaml_file, file_type):
             sys.exit(2)
     except Exception as e:
         logging.exception(pformat(e))
-    if op_result:
+    if op_result == True:
+        logging.info("Object already exist")
+    elif op_result:
         logging.info("Done")
     else:
         logging.error("Operation failed")
