@@ -45,10 +45,10 @@ def guess_yaml_type(yml, xml_exported=False):
     if xml_exported:
         if 'groups' in yml and not 'templates' in yml and not 'hosts' in yml: return 'group'
         if 'templates' in yml: return 'template'
-        if 'value_maps' in yml: return 'valuemap'
         if 'maps' in yml: return 'map'
         if 'screens' in yml: return 'screen'
         if 'hosts' in yml: return 'host'
+        if 'value_maps' in yml: return 'valuemap'
     else:
         if yml.keys() >= {"algorithm", "goodsla"}: return 'service'
         if yml.keys() >= {"proxy_hostid"}: return 'proxy'
