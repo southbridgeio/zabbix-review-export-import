@@ -23,7 +23,7 @@ after_script:
     - cd $GITLAB_REPO
     - git checkout -b develop origin/develop || git checkout develop
     - git pull
-    - rm -vrf *
+    - rm -rf *
     - python ../zabbix-export.py $SAVE_YAML
     - git add .
     - d=$(date +%Y-%m-%d)
