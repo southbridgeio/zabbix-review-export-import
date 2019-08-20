@@ -74,11 +74,11 @@ def get_hostgroups_cache(zabbix):
 
 def get_template_cache(zabbix):
     "Return dict templatename=>templateid or None on error"
-    result = zabbix.template.get(output=['templateid', 'name'])
+    result = zabbix.template.get(output=['templateid', 'host'])
     logging.debug(pformat(result))
     template2templateid = {} # key: template name, value: templateid
     for template in result:
-        template2templateid[template['name']] = template['templateid']
+        template2templateid[template['host']] = template['templateid']
     return template2templateid
 
 def get_proxy_cache(zabbix):
