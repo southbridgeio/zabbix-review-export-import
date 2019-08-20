@@ -211,6 +211,9 @@ def import_host(zabbix, yml):
         # - httptests
         # - triggers
         # - items
+        # - discovery_rules
+        # - applications?
+        # - graphs
     except ZabbixAPIException as e:
         if 'already exists' in str(e):
             result = True
@@ -278,7 +281,6 @@ def import_template(zabbix, yml):
         # - discovery_rules
         # - applications?
         # - graphs
-        # - screens
     except ZabbixAPIException as e:
         if 'already exist' in str(e):
             result = True
