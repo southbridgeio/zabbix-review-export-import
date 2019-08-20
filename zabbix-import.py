@@ -334,13 +334,22 @@ def main(zabbix_, yaml_file, file_type):
         logging.error("Operation failed")
         sys.exit(3)
 
+def environ_or_required(key):
+    "Argparse environment vars helper"
+    if os.environ.get(key):
+        return {'default': os.environ.get(key)}
+    else:
+        return {'required': True}
+
 def parse_args():
     "Return parsed CLI args"
     parser = argparse.ArgumentParser(description="Import Zabbix object from YAML dump")
     parser.add_argument ("--debug", action="store_true", help="Show debug output")
-    parser.add_argument("--zabbix-url", action="store", required=True)
-    parser.add_argument("--zabbix-username", action="store", required=True)
-    parser.add_argument("--zabbix-password", action="store", required=True)
+
+    parser.add_argument("--zabbix-url", action="store", **environ_or_required('ZABBIX_URL'))
+    parser.add_argument("--zabbix-username", action="store", **environ_or_required('ZABBIX_USERNAME'))
+    parser.add_argument("--zabbix-password", action="store", **environ_or_required('ZABBIX_PASSWORD'))
+
     parser.add_argument("--type", choices=["autoguess", "host", "group", "template", "valuemap", "screen", "map", "service", "maintenance", "user", "mediatype", "usergroup", "action", "usermacro", "proxy", "image", "globalmacro"], default="autoguess", help="Zabbix object type, default is %(default)s")
     parser.add_argument("FILE", help="YAML file to import from")
 

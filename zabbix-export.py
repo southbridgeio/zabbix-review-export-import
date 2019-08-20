@@ -227,12 +227,20 @@ def main(zabbix_, save_yaml, directory):
     maintenances = zabbix_.maintenance.get(selectGroups=['name'], selectHosts=["name"], selectTimeperiods='extend')
     dumps_json(object='maintenances', data=maintenances, save_yaml=save_yaml, directory=directory, drop_keys=["maintenanceid"])
 
+
+def environ_or_required(key):
+    "Argparse environment vars helper"
+    if os.environ.get(key):
+        return {'default': os.environ.get(key)}
+    else:
+        return {'required': True}
+
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--zabbix-url", action="store", required=True)
-    parser.add_argument("--zabbix-username", action="store", required=True)
-    parser.add_argument("--zabbix-password", action="store", required=True)
+    parser.add_argument("--zabbix-url", action="store", **environ_or_required('ZABBIX_URL'))
+    parser.add_argument("--zabbix-username", action="store", **environ_or_required('ZABBIX_USERNAME'))
+    parser.add_argument("--zabbix-password", action="store", **environ_or_required('ZABBIX_PASSWORD'))
 
     parser.add_argument("--directory", action="store", default='./',
                         help="Directory where exported files will be saved")
