@@ -125,6 +125,14 @@ def get_mediatype_cache(zabbix):
         mediatype2mediatypeid[mt['description']] = mt['mediatypeid']
     return mediatype2mediatypeid
 
+def get_screen_cache(zabbix):
+    "Return dict screen name=>screenid or None on error"
+    result = zabbix.screen.get(output=["name", "screenid"])
+    screen2screenid = {}  # key: screen name, value: screenid
+    for sc in result:
+        screen2screenid[sc['name']] = sc['screenid']
+    return screen2screenid
+
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     g = yml['groups']['group']
@@ -400,7 +408,33 @@ def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2media
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache):
+def import_screen(zabbix, yml, screen2screenid):
+    "Import screen from YAML. Return created object, None on error, True if object already exists"
+    s = yml['screens']['screen']
+    if s['name'] in screen2screenid: return True # skip existing objects
+
+    result = None
+    try:
+        result = zabbix.screen.create({
+            "name": s['name'],
+            "hsize": s['hsize'],
+            "vsize": s['vsize'],
+            "": s[''],
+            "": s[''],
+            "": s[''],
+            "": s[''],
+            "": s[''],
+            "": s[''],
+            "": s[''],
+        })
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            logging.exception(e)
+    return result
+
+def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
     api_version = zabbix_.apiinfo.version()
     logging.debug('Destination Zabbix server version: {}'.format(api_version))
@@ -442,6 +476,8 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
             op_result = import_usergroup(zabbix_, yml, group_cache, usergroup_cache)
         elif file_type == "user":
             op_result = import_user(zabbix_, yml, usergroup_cache, users_cache, mediatype_cache)
+        elif file_type == 'screen':
+            op_result = import_screen(zabbix_, yml, screen_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
@@ -518,10 +554,23 @@ if __name__ == "__main__":
         usergroup2usergroupid = get_usergroup_cache(zabbix_)
         user2userid = get_users_cache(zabbix_)
         mediatype2mediatypeid = get_mediatype_cache(zabbix_)
+        screen2screenid = get_screen_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
-            r = main(zabbix_=zabbix_, yaml_file=f, file_type=args.type, group_cache=group2groupid, template_cache=template2templateid, proxy_cache=proxy2proxyid, host_cache=host2hostid, usergroup_cache=usergroup2usergroupid, users_cache=user2userid, mediatype_cache=mediatype2mediatypeid)
+            r = main(
+                zabbix_=zabbix_,
+                yaml_file=f,
+                file_type=args.type,
+                group_cache=group2groupid,
+                template_cache=template2templateid,
+                proxy_cache=proxy2proxyid,
+                host_cache=host2hostid,
+                usergroup_cache=usergroup2usergroupid,
+                users_cache=user2userid,
+                mediatype_cache=mediatype2mediatypeid,
+                screen_cache=screen2screenid,
+            )
             if not r: result = False
     except Exception as e:
         result = False
