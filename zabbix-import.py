@@ -363,11 +363,15 @@ def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2media
         for g in yml['usrgrps']:
             groups.append({"usrgrpid": usergroup2usergroupid[g['name']]})
 
+        mediatypeid2mediatype = {} # key: mediatypeid, value: medeitype name
+        for mt in yml['mediatypes']:
+            mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
+
         medias = []
         for m in yml['medias']:
             medias.append({
                 "active": m['active'],
-                "mediatypeid": mediatype2mediatypeid[m['mediatypeid']],
+                "mediatypeid": mediatype2mediatypeid[mediatypeid2mediatype[m['mediatypeid']]],
                 "period": m['period'],
                 "sendto": m['sendto'],
                 "severity": m['severity'] ,
