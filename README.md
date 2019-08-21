@@ -1,10 +1,13 @@
-# Zabbix Review and Export
-With Zabbix review and export (backup) you can create review mechanism and save zabbix configuration as code (Monitoring as Code)
+# Zabbix Review and Export/Import
+With Zabbix review and export (backup)/import you can create review mechanism and save/restore zabbix configuration as code (Monitoring as Code)
 
-You can only export (backup) all hosts templates and other object with `zabbix-export.py` script.
+You can export (backup) all hosts templates and other object with `zabbix-export.py` script.
+
+You can also import (restore) many types of zabbix objects from YAML dump with `zabbix-import.py` script (note that order of import is **matters**, i.e., you cant add user if there is no mediatype for them, etc...). Already existed objects will be skipped.
 
 - [Requirements](#requirements)
 - [Make export and backup](#make-export-and-backup)
+- [Restore from YAML dump](#restore-from-yaml-dump)
 - [Make review](#make-review)
   - [Notes](#notes)
 - [Supported objects](#supported-objects)
@@ -39,7 +42,17 @@ python ./zabbix-export.py --save-yaml --zabbix-url https://zabbix.example.com --
 # backup to custom folder in YAML format
 python ./zabbix-export.py --save-yaml --directory /home/username/path/to/zabbix-yaml --zabbix-url https://zabbix.example.com --zabbix-username user --zabbix-password password
 ```
+## Restore from YAML dump
+Few examples:
+```bash
+export ZABBIX_URL="https://zabbix.instan.ce"
+export ZABBIX_USERNAME="user.name"
+export ZABBIX_PASSWORD="secret"
 
+./zabbix-import.py /path/to/file.yaml
+
+./zabbix-import.py --type host /path/fo/repo/hosts/*
+```
 ## Make review
 You want to make review (Moniroting as Code). Read more on habr.com: [RU](#), [EN translated](#)
 1. Fork this repository to you GitLab account or instance (e.g. `groupname/zabbix-review-export`)
@@ -54,7 +67,7 @@ You want to make review (Moniroting as Code). Read more on habr.com: [RU](#), [E
 
 ### Notes
 Use two repositories for XML+JSON (raw-format) and readable YAML format:
-- `XML` + `JSON` will be useful if you want restore some object after remove or alarge number of changes.
+- `XML` + `JSON` will be useful if you want restore some object after remove or a large number of changes.
 - `YAML` format is more suitable for people to read and review changes. The script removes all empty values.
 
 Create empty merge request `develop=>master` after merge and receive notifications at changes (schedule or manual jobs run) on your email.
@@ -62,7 +75,7 @@ Create empty merge request `develop=>master` after merge and receive notificatio
 To answer for the question "Who make this changes?" you need use [Zabbix Audit](https://www.zabbix.com/documentation/4.0/manual/web_interface/frontend_sections/reports/audit). It's difficult but possible.
 
 ## Supported objects
-Use standart [zabbix export functional](https://www.zabbix.com/documentation/4.0/manual/api/reference/configuration/export):
+Use standard [zabbix export functional](https://www.zabbix.com/documentation/4.0/manual/api/reference/configuration/export):
 - hosts
 - templates
 - screen
