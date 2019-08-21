@@ -120,6 +120,7 @@ def import_proxy(zabbix, yml, proxy2proxyid):
     result = None
     try:
         result = zabbix.proxy.create(host=yml['host'], status=yml['status'], description=yml['description'], tls_accept=yml['tls_accept'], tls_connect=yml['tls_connect'], tls_issuer=yml['tls_issuer'], tls_psk=yml['tls_psk'], tls_psk_identity=yml['tls_psk_identity'], tls_subject=yml['tls_subject'])
+        logging.debug(pformat(result))
     except ZabbixAPIException as e:
         if 'already exist' in str(e):
             result = True
@@ -212,6 +213,7 @@ def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid, 
             "templates": linked_templates,
             "groups": groups,
             })
+        logging.debug(pformat(result))
         # TBD/TODO/FIXME:
         # - httptests
         # - triggers
@@ -289,6 +291,40 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
             logging.exception(e)
     return result
 
+def import_usergroup(zabbix, yml, group2groupid):
+    "Import usergroup from YAML. Return created object , None on error, True if object already exists"
+    if yml['name'] in group2groupid: return True # skip existing objects
+
+    result = None
+    try:
+        # set rights for new usergroup:
+        if 'rights' in yml:
+            if isinstance(yml['rights'], dict):
+                rights = [{'id': yml['rights']['id'], 'permission': yml['rights']['permission']}]
+            else:
+                rights = []
+                for r in yml['rights']:
+                    rights.append({
+                        "id": group2groupid[r['id']],
+                        "permission": r['permission'],
+                    })
+        else:
+            rights = []
+
+        result = zabbix.usergroup.create(
+            name=yml['name'],
+            debug_mode=yml['debug_mode'] if 'debug_mode' in yml else 0,
+            gui_access=yml['gui_access'] if 'gui_access' in yml else 0,
+            users_status=yml['users_status'] if 'users_status' in yml else 0,
+            rights=rights
+        )
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            logging.exception(e)
+    return result
+
 def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
     api_version = zabbix_.apiinfo.version()
@@ -327,6 +363,8 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
             op_result = import_proxy(zabbix_, yml, proxy_cache)
         elif file_type == "host":
             op_result = import_host(zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache)
+        elif file_type == "usergroup":
+            op_result = import_usergroup(zabbix_, yml, group_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
