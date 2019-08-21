@@ -289,6 +289,7 @@ def import_template(zabbix, yml):
     return result
 
 def main(zabbix_, yaml_file, file_type):
+    "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
     api_version = zabbix_.apiinfo.version()
     logging.debug('Destination Zabbix server version: {}'.format(api_version))
 
@@ -313,7 +314,7 @@ def main(zabbix_, yaml_file, file_type):
         else: file_type = guess_yaml_type(yml, xml_exported=xml_exported)
         if file_type == 'autoguess':
             logging.error("Cant guess object type, exiting...")
-            sys.exit(1)
+            return None
         logging.info('Guessed file type: {}'.format(file_type))
 
     try:
@@ -327,16 +328,15 @@ def main(zabbix_, yaml_file, file_type):
             op_result = import_host(zabbix_, yml)
         else:
             logging.error("This file type not yet implemented, exiting...")
-            sys.exit(2)
     except Exception as e:
         logging.exception(pformat(e))
     if op_result == True:
         logging.info("Object already exist")
     elif op_result:
-        logging.info("Done")
+        logging.info("Operation completed successfully")
     else:
         logging.error("Operation failed")
-        sys.exit(3)
+    return op_result
 
 def environ_or_required(key):
     "Argparse environment vars helper"
@@ -391,6 +391,13 @@ if __name__ == "__main__":
 
     zabbix_ = get_zabbix_connection(args.zabbix_url, args.zabbix_username, args.zabbix_password)
 
+    result = True               # Total success indicator
     for f in args.FILE:
         logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
-        main(zabbix_=zabbix_, yaml_file=f, file_type=args.type)
+        r =main(zabbix_=zabbix_, yaml_file=f, file_type=args.type)
+        if not r: result = False
+    # Total success summary:
+    if not result:
+        logging.error("Some operations failed")
+        sys.exit(1)
+    logging.info("Done")
