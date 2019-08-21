@@ -180,7 +180,6 @@ def main(zabbix_, save_yaml, directory):
     export(zabbix_.host, 'hosts', 'hostid', 'name')
     export(zabbix_.template, 'templates', 'templateid', 'name')
     export(zabbix_.valuemap, 'valueMaps', 'valuemapid', 'name')
-    export(zabbix_.screen, 'screens', 'screenid', 'name')
     export(zabbix_.map, 'maps', 'sysmapid', 'name')
 
     # JSON
@@ -201,10 +200,14 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing usergroups...")
     usergroups = zabbix_.usergroup.get(selectRights='extend')
+
+    # existing hostgroups
     result = zabbix_.hostgroup.get(output=['groupid', 'name'])
     groupid2group = {}             # key: groupid, value: group name
     for group in result:
         groupid2group[group['groupid']] = group['name']
+
+    # resolve hostgroupids:
     for usergroup in usergroups:
         resolved_rights = []
         for r in usergroup['rights']:
@@ -239,6 +242,40 @@ def main(zabbix_, save_yaml, directory):
     maintenances = zabbix_.maintenance.get(selectGroups=['name'], selectHosts=["name"], selectTimeperiods='extend')
     dumps_json(object='maintenances', data=maintenances, save_yaml=save_yaml, directory=directory, drop_keys=["maintenanceid"])
 
+    logging.info("Processing screens...")
+    screens = zabbix_.screen.get(selectUsers='extend', selectUserGroups='extend', selectScreenItems='extend')
+
+    # existing usergroups:
+    result = zabbix_.usergroup.get(output=["name", "usrgrpid"])
+    usergroupid2usergroup = {}  # key: usergroupid, value: usergroup name
+    for ug in result:
+        usergroupid2usergroup[ug['usrgrpid']] = ug['name']
+
+    # existing users:
+    result = zabbix_.user.get(output=["alias", "userid"])
+    userid2user = {}            # key: userid, value: user alias
+    for u in result:
+        userid2user[u['userid']] = u['alias']
+
+    # resolve users/usergroups:
+    for screen in screens:
+        screen['userid'] = userid2user[screen['userid']]
+        resolved_users = []
+        resolved_groups = []
+        for user in screen['users']:
+            resolved_users.append({
+                'permission': user['permission'],
+                'userid': userid2user[user['userid']],
+            })
+        screen['users'] = resolved_users
+        for group in screen['userGroups']:
+            resolved_groups.append({
+                "permission": group['permission'],
+                "usrgrpid": usergroupid2usergroup[group['usrgrpid']],
+            })
+        screen['userGroups'] = resolved_groups
+
+    dumps_json(object='screens', data=screens, save_yaml=save_yaml, directory=directory, drop_keys=["screenid"])
 
 def environ_or_required(key):
     "Argparse environment vars helper"
