@@ -365,7 +365,7 @@ def parse_args():
 
 def init_logging(level):
     "Initialize logging"
-    logger_format_string = '%(levelname)-8s %(message)s'
+    logger_format_string = '%(asctime)s %(levelname)-8s %(message)s'
     logging.basicConfig(level=level, format=logger_format_string, stream=sys.stdout)
 
 if __name__ == "__main__":
