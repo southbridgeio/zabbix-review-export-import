@@ -11,6 +11,10 @@ import yaml
 
 from pyzabbix import ZabbixAPI, ZabbixAPIException
 from pprint import pprint, pformat
+import random, string
+
+def randompassword():
+    return ''.join([random.choice(string.printable) for _ in range(random.randint(8, 10))])
 
 def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
     """
@@ -104,6 +108,22 @@ def get_usergroup_cache(zabbix):
     for ug in result:
         usergroup2usergroupid[ug['name']] = ug['usrgrpid']
     return usergroup2usergroupid
+
+def get_users_cache(zabbix):
+    "Return dict username=>userid or None on error"
+    result = zabbix.user.get(output=["alias", "userid"])
+    user2userid = {}            # key: user alias, value: userid
+    for u in result:
+        user2userid[u['alias']] = u['userid']
+    return user2userid
+
+def get_mediatype_cache(zabbix):
+    "Return dict mediatype=>mediatypeid or None on error"
+    result = zabbix.mediatype.get(output=["description", "mediatypeid"])
+    mediatype2mediatypeid = {}  # key: mediatype name, value: mediatypeid
+    for mt in result:
+        mediatype2mediatypeid[mt['description']] = mt['mediatypeid']
+    return mediatype2mediatypeid
 
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
@@ -333,7 +353,50 @@ def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache):
+def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2mediatypeid):
+    "Import user from YAML. Return created object, None on error, True if object already exists"
+    if yml['alias'] in user2userid: return True # skip existing objects
+
+    result = None
+    try:
+        groups = []
+        for g in yml['usrgrps']:
+            groups.append({"usrgrpid": usergroup2usergroupid[g['name']]})
+
+        medias = []
+        for m in yml['medias']:
+            medias.append({
+                "active": m['active'],
+                "mediatypeid": mediatype2mediatypeid[m['mediatypeid']],
+                "period": m['period'],
+                "sendto": m['sendto'],
+                "severity": m['severity'] ,
+            })
+
+        result = zabbix.user.create({
+            "alias": yml['alias'],
+            "autologin": yml['autologin'] if 'autologin' in yml else 0,
+            "autologout": yml['autologout'] if 'autologout' in yml else '15m',
+            "lang": yml['lang'] if 'lang' in yml else 'en_GB',
+            "name": yml['name'] if 'name' in yml else '',
+            "surname": yml['surname'] if 'surname' in yml else '',
+            "refresh": yml['refresh'] if 'refresh' in yml else '30s',
+            "rows_per_page": yml['rows_per_page'] if 'rows_per_page' in yml else 50,
+            "theme": yml['theme'] if 'theme' in yml else 'default',
+            "type": yml['type'] if 'type' in yml else 1,
+            "url": yml['url'] if 'url' in yml else '',
+            "passwd": randompassword(), # YAML dump dont contains passwords/hashes
+            "usrgrps": groups,
+            "user_medias": medias,
+        })
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            logging.exception(e)
+    return result
+
+def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
     api_version = zabbix_.apiinfo.version()
     logging.debug('Destination Zabbix server version: {}'.format(api_version))
@@ -373,6 +436,8 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
             op_result = import_host(zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache)
         elif file_type == "usergroup":
             op_result = import_usergroup(zabbix_, yml, group_cache, usergroup_cache)
+        elif file_type == "user":
+            op_result = import_user(zabbix_, yml, usergroup_cache, users_cache, mediatype_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
@@ -447,10 +512,12 @@ if __name__ == "__main__":
         proxy2proxyid = get_proxy_cache(zabbix_)
         host2hostid = get_hosts_cache(zabbix_)
         usergroup2usergroupid = get_usergroup_cache(zabbix_)
+        user2userid = get_users_cache(zabbix_)
+        mediatype2mediatypeid = get_mediatype_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
-            r = main(zabbix_=zabbix_, yaml_file=f, file_type=args.type, group_cache=group2groupid, template_cache=template2templateid, proxy_cache=proxy2proxyid, host_cache=host2hostid, usergroup_cache=usergroup2usergroupid)
+            r = main(zabbix_=zabbix_, yaml_file=f, file_type=args.type, group_cache=group2groupid, template_cache=template2templateid, proxy_cache=proxy2proxyid, host_cache=host2hostid, usergroup_cache=usergroup2usergroupid, users_cache=user2userid, mediatype_cache=mediatype2mediatypeid)
             if not r: result = False
     except Exception as e:
         result = False
