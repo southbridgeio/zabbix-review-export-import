@@ -97,6 +97,14 @@ def get_hosts_cache(zabbix):
         host2hostid[host["host"]] = host['hostid']
     return host2hostid
 
+def get_usergroup_cache(zabbix):
+    "Return dict usergroupname=>usergroupid or None on error"
+    result = zabbix.usergroup.get(output=["name", "usrgrpid"])
+    usergroup2usergroupid = {}  # key: usergroup name, value: usrgrpid
+    for ug in result:
+        usergroup2usergroupid[ug['name']] = ug['usrgrpid']
+    return usergroup2usergroupid
+
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     g = yml['groups']['group']
@@ -291,9 +299,9 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
             logging.exception(e)
     return result
 
-def import_usergroup(zabbix, yml, group2groupid):
+def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
     "Import usergroup from YAML. Return created object , None on error, True if object already exists"
-    if yml['name'] in group2groupid: return True # skip existing objects
+    if yml['name'] in usergroup2usergroupid: return True # skip existing objects
 
     result = None
     try:
@@ -325,7 +333,7 @@ def import_usergroup(zabbix, yml, group2groupid):
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache):
+def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
     api_version = zabbix_.apiinfo.version()
     logging.debug('Destination Zabbix server version: {}'.format(api_version))
@@ -364,7 +372,7 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
         elif file_type == "host":
             op_result = import_host(zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache)
         elif file_type == "usergroup":
-            op_result = import_usergroup(zabbix_, yml, group_cache)
+            op_result = import_usergroup(zabbix_, yml, group_cache, usergroup_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
@@ -438,10 +446,11 @@ if __name__ == "__main__":
         template2templateid = get_template_cache(zabbix_)
         proxy2proxyid = get_proxy_cache(zabbix_)
         host2hostid = get_hosts_cache(zabbix_)
+        usergroup2usergroupid = get_usergroup_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
-            r = main(zabbix_=zabbix_, yaml_file=f, file_type=args.type, group_cache=group2groupid, template_cache=template2templateid, proxy_cache=proxy2proxyid, host_cache=host2hostid)
+            r = main(zabbix_=zabbix_, yaml_file=f, file_type=args.type, group_cache=group2groupid, template_cache=template2templateid, proxy_cache=proxy2proxyid, host_cache=host2hostid, usergroup_cache=usergroup2usergroupid)
             if not r: result = False
     except Exception as e:
         result = False
