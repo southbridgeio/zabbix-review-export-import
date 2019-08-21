@@ -60,7 +60,7 @@ def guess_yaml_type(yml, xml_exported=False):
         if yml.keys() >= {"hostid", "macro"}: return 'usermacro'
         if yml.keys() >= {"macro"}: return 'globalmacro'
         if yml.keys() >= {"imagetype"}: return 'image'
-        
+
     return 'autoguess'
 
 def get_hostgroups_cache(zabbix):
@@ -89,11 +89,22 @@ def get_proxy_cache(zabbix):
         proxy2proxyid[proxy['host']] = proxy['proxyid']
     return proxy2proxyid
 
-def import_group(zabbix, yml):
+def get_hosts_cache(zabbix):
+    "Return dict hostname=>hostid or None on error"
+    result = zabbix.host.get(output=["host", "hostid"])
+    host2hostid = {}            # key: host name, value: hostid
+    for host in result:
+        host2hostid[host["host"]] = host['hostid']
+    return host2hostid
+
+def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
+    g = yml['groups']['group']
+    if g['name'] in group2groupid: return True # skip existing objects
+
     result = None
     try:
-        result = zabbix.hostgroup.create(name=yml['groups']['group']['name'])
+        result = zabbix.hostgroup.create(name=g['name'])
         logging.debug(pformat(result))
     except ZabbixAPIException as e:
         if 'already exist' in str(e):
@@ -102,8 +113,10 @@ def import_group(zabbix, yml):
             logging.error(e)
     return result
 
-def import_proxy(zabbix, yml):
+def import_proxy(zabbix, yml, proxy2proxyid):
     "Import proxy form YAML. Return created object, None on error, True if object already exists"
+    if yml['host'] in proxy2proxyid: return True # skip existing objects
+
     result = None
     try:
         result = zabbix.proxy.create(host=yml['host'], status=yml['status'], description=yml['description'], tls_accept=yml['tls_accept'], tls_connect=yml['tls_connect'], tls_issuer=yml['tls_issuer'], tls_psk=yml['tls_psk'], tls_psk_identity=yml['tls_psk_identity'], tls_subject=yml['tls_subject'])
@@ -114,11 +127,12 @@ def import_proxy(zabbix, yml):
             logging.error(e)
     return result
 
-def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid):
+def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid, host2hostid):
     "Import host from YAML. Return created object, None on error, True if object already exists"
     result = None
     try:
         host = yml['hosts']['host']
+        if host['host'] in host2hostid: return True # skip existing objects
 
         # set groupid(s) for new template:
         if isinstance(host['groups']['group'], dict):
@@ -217,6 +231,8 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
     result = None
     try:
         new_template = yml['templates']['template']
+        if new_template['template'] in template2templateid: return True # skip existing objects
+
         # set groupid(s) for new template:
         if isinstance(new_template['groups']['group'], dict):
             groups = [{'groupid': group2groupid[new_template['groups']['group']['name']]}]
@@ -273,7 +289,7 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache):
+def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
     api_version = zabbix_.apiinfo.version()
     logging.debug('Destination Zabbix server version: {}'.format(api_version))
@@ -304,13 +320,13 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
 
     try:
         if file_type == "group":
-            op_result = import_group(zabbix_, yml)
+            op_result = import_group(zabbix_, yml, group_cache)
         elif file_type == "template":
             op_result = import_template(zabbix_, yml, group_cache, template_cache)
         elif file_type == "proxy":
-            op_result = import_proxy(zabbix_, yml)
+            op_result = import_proxy(zabbix_, yml, proxy_cache)
         elif file_type == "host":
-            op_result = import_host(zabbix_, yml, group_cache, template_cache, proxy_cache)
+            op_result = import_host(zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
@@ -383,10 +399,11 @@ if __name__ == "__main__":
         group2groupid = get_hostgroups_cache(zabbix_)
         template2templateid = get_template_cache(zabbix_)
         proxy2proxyid = get_proxy_cache(zabbix_)
-        
+        host2hostid = get_hosts_cache(zabbix_)
+
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
-            r = main(zabbix_=zabbix_, yaml_file=f, file_type=args.type, group_cache=group2groupid, template_cache=template2templateid, proxy_cache=proxy2proxyid)
+            r = main(zabbix_=zabbix_, yaml_file=f, file_type=args.type, group_cache=group2groupid, template_cache=template2templateid, proxy_cache=proxy2proxyid, host_cache=host2hostid)
             if not r: result = False
     except Exception as e:
         result = False
