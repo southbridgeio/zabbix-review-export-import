@@ -201,6 +201,18 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing usergroups...")
     usergroups = zabbix_.usergroup.get(selectRights='extend')
+    result = zabbix_.hostgroup.get(output=['groupid', 'name'])
+    groupid2group = {}             # key: groupid, value: group name
+    for group in result:
+        groupid2group[group['groupid']] = group['name']
+    for usergroup in usergroups:
+        resolved_rights = []
+        for r in usergroup['rights']:
+            resolved_rights.append({
+                "id": groupid2group[r['id']],
+                "permission": r['permission'],
+            })
+        usergroup['rights'] = resolved_rights
     dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory, drop_keys=["usrgrpid"])
 
     logging.info("Processing users...")
@@ -238,9 +250,9 @@ def environ_or_required(key):
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--zabbix-url", action="store", **environ_or_required('ZABBIX_URL'))
-    parser.add_argument("--zabbix-username", action="store", **environ_or_required('ZABBIX_USERNAME'))
-    parser.add_argument("--zabbix-password", action="store", **environ_or_required('ZABBIX_PASSWORD'))
+    parser.add_argument("--zabbix-url", action="store", help="REQUIRED. May be in ZABBIX_URL env var", **environ_or_required('ZABBIX_URL'))
+    parser.add_argument("--zabbix-username", action="store", help="REQUIRED. May be in ZABBIX_USERNAME env var", **environ_or_required('ZABBIX_USERNAME'))
+    parser.add_argument("--zabbix-password", action="store", help="REQUIRED. May be in ZABBIX_PASSWORD env var", **environ_or_required('ZABBIX_PASSWORD'))
 
     parser.add_argument("--directory", action="store", default='./',
                         help="Directory where exported files will be saved")
