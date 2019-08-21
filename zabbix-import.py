@@ -373,7 +373,7 @@ def parse_args():
         "image",
         "globalmacro"
     ], default="autoguess", help="Zabbix object type, default is %(default)s")
-    parser.add_argument("FILE", help="YAML file to import from")
+    parser.add_argument("FILE", help="YAML file to import from",nargs='+')
 
     args = parser.parse_args()
     return args
@@ -391,5 +391,6 @@ if __name__ == "__main__":
 
     zabbix_ = get_zabbix_connection(args.zabbix_url, args.zabbix_username, args.zabbix_password)
 
-    logging.debug("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(args.FILE)))
-    main(zabbix_=zabbix_, yaml_file=args.FILE, file_type=args.type)
+    for f in args.FILE:
+        logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
+        main(zabbix_=zabbix_, yaml_file=f, file_type=args.type)
