@@ -489,8 +489,9 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
             op_result = import_usergroup(zabbix_, yml, group_cache, usergroup_cache)
         elif file_type == "user":
             op_result = import_user(zabbix_, yml, usergroup_cache, users_cache, mediatype_cache)
-        elif file_type == 'screen':
-            op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
+        # FIXME in future (too complex):
+        # elif file_type == 'screen':
+        #     op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
