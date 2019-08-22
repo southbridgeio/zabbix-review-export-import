@@ -378,10 +378,13 @@ def import_action(zabbix, yml, action2actionid, template2templateid):
         yml['filter']['formula'] = yml['filter']['eval_formula']
         del yml['filter']['eval_formula']
         # resolve template names:
-        for a in yml['operations']:
-            if 'optemplate' in a:
-                for aa in a['optemplate']:
+        for op in yml['operations']:
+            del op['actionid']
+            del op['operationid']
+            if 'optemplate' in op:
+                for aa in op['optemplate']:
                     aa['templateid'] = template2templateid[aa['templateid']]
+                    del aa['operationid']
 
         result = zabbix.action.create(yml)
     except ZabbixAPIException as e:
