@@ -375,14 +375,11 @@ def import_action(zabbix, yml, action2actionid, template2templateid, group2group
 
     result = None
     try:
-        yml['filter']['formula'] = yml['filter']['eval_formula']
-        del yml['filter']['eval_formula']
         # resolve template and group names:
         for op in yml['operations']:
             if 'optemplate' in op:
                 for opt in op['optemplate']:
                     opt['templateid'] = template2templateid[opt['templateid']]
-                    del opt['operationid']
             if 'opgroup' in op:
                 for opg in op['opgroup']:
                     opg['groupid'] = group2groupid[opg['groupid']]

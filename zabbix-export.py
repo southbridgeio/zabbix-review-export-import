@@ -225,6 +225,8 @@ def main(zabbix_, save_yaml, directory):
 
     # resolve templateids:
     for action in actions:
+        action['filter']['formula'] = action['filter']['eval_formula']
+        del action['filter']['eval_formula']
         for op in action['operations']:
             del op['actionid']
             del op['operationid']
