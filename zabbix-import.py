@@ -133,6 +133,14 @@ def get_screen_cache(zabbix):
         screen2screenid[sc['name']] = sc['screenid']
     return screen2screenid
 
+def get_action_cache(zabbix):
+    "Return dict action name=>actionid or None on error"
+    result = zabbix.action.get(output=["name", "actionid"])
+    action2actionid = {}        # key: action name, value: actionid
+    for a in result:
+        action2actionid[a['name']] = a['actionid']
+    return action2actionid
+
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     g = yml['groups']['group']
@@ -361,6 +369,28 @@ def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
             logging.exception(e)
     return result
 
+def import_action(zabbix, yml, action2actionid, template2templateid):
+    "Import action from YAML. Return created object, None on error, True if object already exists"
+    if yml['name'] in action2actionid: return True # skip existing objects
+
+    result = None
+    try:
+        yml['filter']['formula'] = yml['filter']['eval_formula']
+        del yml['filter']['eval_formula']
+        # resolve template names:
+        for a in yml['operations']:
+            if 'optemplate' in a:
+                for aa in a['optemplate']:
+                    aa['templateid'] = template2templateid[aa['templateid']]
+
+        result = zabbix.action.create(yml)
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            logging.exception(e)
+    return result
+
 def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2mediatypeid):
     "Import user from YAML. Return created object, None on error, True if object already exists"
     if yml['alias'] in user2userid: return True # skip existing objects
@@ -447,7 +477,7 @@ def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroup
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache):
+def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
     api_version = zabbix_.apiinfo.version()
     logging.debug('Destination Zabbix server version: {}'.format(api_version))
@@ -492,6 +522,8 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
         # FIXME in future (too complex):
         # elif file_type == 'screen':
         #     op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
+        elif file_type == 'action':
+            op_result = import_action(zabbix_, yml, action_cache, template_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
@@ -569,6 +601,7 @@ if __name__ == "__main__":
         user2userid = get_users_cache(zabbix_)
         mediatype2mediatypeid = get_mediatype_cache(zabbix_)
         screen2screenid = get_screen_cache(zabbix_)
+        action2actionid = get_action_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
@@ -584,6 +617,7 @@ if __name__ == "__main__":
                 users_cache=user2userid,
                 mediatype_cache=mediatype2mediatypeid,
                 screen_cache=screen2screenid,
+                action_cache=action2actionid,
             )
             if not r: result = False
     except Exception as e:
