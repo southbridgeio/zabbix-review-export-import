@@ -369,7 +369,7 @@ def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
             logging.exception(e)
     return result
 
-def import_action(zabbix, yml, action2actionid, template2templateid):
+def import_action(zabbix, yml, action2actionid, template2templateid, group2groupid):
     "Import action from YAML. Return created object, None on error, True if object already exists"
     if yml['name'] in action2actionid: return True # skip existing objects
 
@@ -377,14 +377,17 @@ def import_action(zabbix, yml, action2actionid, template2templateid):
     try:
         yml['filter']['formula'] = yml['filter']['eval_formula']
         del yml['filter']['eval_formula']
-        # resolve template names:
+        # resolve template and group names:
         for op in yml['operations']:
             del op['actionid']
             del op['operationid']
             if 'optemplate' in op:
-                for aa in op['optemplate']:
-                    aa['templateid'] = template2templateid[aa['templateid']]
+                for opt in op['optemplate']:
+                    opt['templateid'] = template2templateid[opt['templateid']]
                     del aa['operationid']
+            if 'opgroup' in op:
+                for opg in op['opgroup']:
+                    opg['groupid'] = group2groupid[opg['groupid']]
 
         result = zabbix.action.create(yml)
     except ZabbixAPIException as e:
@@ -526,7 +529,7 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
         # elif file_type == 'screen':
         #     op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
         elif file_type == 'action':
-            op_result = import_action(zabbix_, yml, action_cache, template_cache)
+            op_result = import_action(zabbix_, yml, action_cache, template_cache, group_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
