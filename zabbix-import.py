@@ -382,7 +382,7 @@ def import_action(zabbix, yml, action2actionid, template2templateid, group2group
             if 'optemplate' in op:
                 for opt in op['optemplate']:
                     opt['templateid'] = template2templateid[opt['templateid']]
-                    del aa['operationid']
+                    del opt['operationid']
             if 'opgroup' in op:
                 for opg in op['opgroup']:
                     opg['groupid'] = group2groupid[opg['groupid']]
