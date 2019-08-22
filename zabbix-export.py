@@ -186,22 +186,6 @@ def main(zabbix_, save_yaml, directory):
     # not support `export` method
     # Read more in https://www.zabbix.com/documentation/4.0/manual/api/reference/configuration/export
     logging.info("Start export JSON part...")
-    logging.info("Processing action...")
-    actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend', selectRecoveryOperations='extend', selectAcknowledgeOperations='extend')
-    # existing templates
-    result = zabbix_.template.get(output=["name", "templateid"])
-    templateid2template = {}    # key: templateid, value template name
-    for template in result:
-        templateid2template[template['templateid']] = template['name']
-
-    # resolve templateids:
-    for action in actions:
-        for op in action['operations']:
-            if 'optemplate' in op:
-                for aa in op['optemplate']:
-                    aa['templateid'] = templateid2template[aa['templateid']]
-
-    dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
 
     logging.info("Processing mediatypes...")
     mediatypes = zabbix_.mediatype.get()
@@ -230,6 +214,30 @@ def main(zabbix_, save_yaml, directory):
             })
         usergroup['rights'] = resolved_rights
     dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory, drop_keys=["usrgrpid"])
+
+    logging.info("Processing action...")
+    actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend', selectRecoveryOperations='extend', selectAcknowledgeOperations='extend')
+    # existing templates
+    result = zabbix_.template.get(output=["name", "templateid"])
+    templateid2template = {}    # key: templateid, value template name
+    for template in result:
+        templateid2template[template['templateid']] = template['name']
+
+    # resolve templateids:
+    for action in actions:
+        for op in action['operations']:
+            del op['actionid']
+            del op['operationid']
+            if 'optemplate' in op:
+                for aa in op['optemplate']:
+                    aa['templateid'] = templateid2template[aa['templateid']]
+                    del aa['operationid']
+            if 'opgroup' in op:
+                for aa in op['opgroup']:
+                    aa['groupid'] = groupid2group[aa['groupid']]
+                    del aa['operationid']
+
+    dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
 
     logging.info("Processing users...")
     users = zabbix_.user.get(selectMedias='extend', selectMediatypes='extend', selectUsrgrps='extend')
