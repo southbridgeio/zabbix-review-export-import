@@ -215,32 +215,6 @@ def main(zabbix_, save_yaml, directory):
         usergroup['rights'] = resolved_rights
     dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory, drop_keys=["usrgrpid"])
 
-    logging.info("Processing action...")
-    actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend', selectRecoveryOperations='extend', selectAcknowledgeOperations='extend')
-    # existing templates
-    result = zabbix_.template.get(output=["name", "templateid"])
-    templateid2template = {}    # key: templateid, value template name
-    for template in result:
-        templateid2template[template['templateid']] = template['name']
-
-    # resolve templateids:
-    for action in actions:
-        action['filter']['formula'] = action['filter']['eval_formula']
-        del action['filter']['eval_formula']
-        for op in action['operations']:
-            del op['actionid']
-            del op['operationid']
-            if 'optemplate' in op:
-                for aa in op['optemplate']:
-                    aa['templateid'] = templateid2template[aa['templateid']]
-                    del aa['operationid']
-            if 'opgroup' in op:
-                for aa in op['opgroup']:
-                    aa['groupid'] = groupid2group[aa['groupid']]
-                    del aa['operationid']
-
-    dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
-
     logging.info("Processing users...")
     users = zabbix_.user.get(selectMedias='extend', selectMediatypes='extend', selectUsrgrps='extend')
     dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory, drop_keys=["userid", "attempt_clock", "attempt_failed", "attempt_ip"])
@@ -299,6 +273,50 @@ def main(zabbix_, save_yaml, directory):
         screen['userGroups'] = resolved_groups
 
     dumps_json(object='screens', data=screens, save_yaml=save_yaml, directory=directory, drop_keys=["screenid"])
+
+    logging.info("Processing action...")
+    actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend', selectRecoveryOperations='extend', selectAcknowledgeOperations='extend')
+    # existing templates
+    result = zabbix_.template.get(output=["name", "templateid"])
+    templateid2template = {}    # key: templateid, value template name
+    for template in result:
+        templateid2template[template['templateid']] = template['name']
+    # existing mediatypes
+    result = zabbix_.mediatype.get(output=["description", "mediatypeid"])
+    mediatypeid2mediatype = {}  # key: mediatype name, value: mediatypeid
+    for mt in result:
+        mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
+
+    # resolve templateids/groupids/mediatypeids/userids/usergroupids:
+    for action in actions:
+        action['filter']['formula'] = action['filter']['eval_formula']
+        del action['filter']['eval_formula']
+        for action_type in ('operations', 'acknowledgeOperations', 'recoveryOperations'):
+            for op in action[action_type]:
+                del op['actionid']
+                del op['operationid']
+                if 'optemplate' in op:
+                    for aa in op['optemplate']:
+                        aa['templateid'] = templateid2template[aa['templateid']]
+                        del aa['operationid']
+                if 'opgroup' in op:
+                    for aa in op['opgroup']:
+                        aa['groupid'] = groupid2group[aa['groupid']]
+                        del aa['operationid']
+                if 'opmessage' in op:
+                    for aa in op['opmessage']:
+                        aa['mediatypeid'] = mediatypeid2mediatype[aa['mediatypeid']]
+                        del aa['operationid']
+                if 'opmessage_grp' in op:
+                    for aa in op['opmessage_grp']:
+                        aa['usrgrpid'] = usergroupid2usergroup[aa['usrgrpid']]
+                        del aa['operationid']
+                if 'opmessage_usr' in op:
+                    for aa in op['opmessage_usr']:
+                        aa['userid'] = userid2user[aa['userid']]
+                        del aa['operationid']
+
+    dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
 
 def environ_or_required(key):
     "Argparse environment vars helper"

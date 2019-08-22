@@ -369,20 +369,25 @@ def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
             logging.exception(e)
     return result
 
-def import_action(zabbix, yml, action2actionid, template2templateid, group2groupid):
+def import_action(zabbix, yml, action2actionid, template2templateid, group2groupid, mediatype2mediatypeid, usergroup2usergroupid, user2userid):
     "Import action from YAML. Return created object, None on error, True if object already exists"
     if yml['name'] in action2actionid: return True # skip existing objects
 
     result = None
     try:
-        # resolve template and group names:
-        for op in yml['operations']:
-            if 'optemplate' in op:
-                for opt in op['optemplate']:
-                    opt['templateid'] = template2templateid[opt['templateid']]
-            if 'opgroup' in op:
-                for opg in op['opgroup']:
-                    opg['groupid'] = group2groupid[opg['groupid']]
+        # resolve template/group/mediatype/usergroup names:
+        for action_type in ('operations', 'acknowledgeOperations', 'recoveryOperations')
+            for op in yml[action_type]:
+                if 'optemplate' in op:
+                    for opt in op['optemplate']: opt['templateid'] = template2templateid[opt['templateid']]
+                if 'opgroup' in op:
+                    for opg in op['opgroup']: opg['groupid'] = group2groupid[opg['groupid']]
+                if 'opmessage' in op:
+                    for opm in op['opmessage']: opm['mediatypeid'] = mediatype2mediatypeid[opm['mediatypeid']]
+                if 'opmessage_grp' in op:
+                    for opmg in op['opmessage_grp']: opmg['usrgrpid'] = usergroup2usergroupid[opmg['usrgrpid']]
+                if 'opmessage_usr' in op:
+                    for opmg in op['opmessage_usr']: opmg['userid'] = usergroup2usergroupid[opmg['userid']]
 
         result = zabbix.action.create(yml)
     except ZabbixAPIException as e:
@@ -524,7 +529,7 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
         # elif file_type == 'screen':
         #     op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
         elif file_type == 'action':
-            op_result = import_action(zabbix_, yml, action_cache, template_cache, group_cache)
+            op_result = import_action(zabbix_, yml, action_cache, template_cache, group_cache, mediatype_cache, usergroup_cache, users_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
