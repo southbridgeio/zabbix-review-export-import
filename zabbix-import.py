@@ -73,7 +73,7 @@ def get_hostgroups_cache(zabbix):
     logging.debug(pformat(result))
     group2groupid = {}             # key: group name, value: groupid
     for group in result:
-        group2groupid[group['name']] = group['groupid']
+        group2groupid[group['name']] = int(group['groupid'])
     return group2groupid
 
 def get_template_cache(zabbix):
@@ -82,7 +82,7 @@ def get_template_cache(zabbix):
     logging.debug(pformat(result))
     template2templateid = {} # key: template name, value: templateid
     for template in result:
-        template2templateid[template['host']] = template['templateid']
+        template2templateid[template['host']] = int(template['templateid'])
     return template2templateid
 
 def get_proxy_cache(zabbix):
@@ -90,7 +90,7 @@ def get_proxy_cache(zabbix):
     result = zabbix.proxy.get(output=["proxyid","host"])
     proxy2proxyid = {}          # key: proxy name, value: proxyid
     for proxy in result:
-        proxy2proxyid[proxy['host']] = proxy['proxyid']
+        proxy2proxyid[proxy['host']] = int(proxy['proxyid'])
     return proxy2proxyid
 
 def get_hosts_cache(zabbix):
@@ -98,7 +98,7 @@ def get_hosts_cache(zabbix):
     result = zabbix.host.get(output=["host", "hostid"])
     host2hostid = {}            # key: host name, value: hostid
     for host in result:
-        host2hostid[host["host"]] = host['hostid']
+        host2hostid[host["host"]] = int(host['hostid'])
     return host2hostid
 
 def get_usergroup_cache(zabbix):
@@ -106,7 +106,7 @@ def get_usergroup_cache(zabbix):
     result = zabbix.usergroup.get(output=["name", "usrgrpid"])
     usergroup2usergroupid = {}  # key: usergroup name, value: usrgrpid
     for ug in result:
-        usergroup2usergroupid[ug['name']] = ug['usrgrpid']
+        usergroup2usergroupid[ug['name']] = int(ug['usrgrpid'])
     return usergroup2usergroupid
 
 def get_users_cache(zabbix):
@@ -114,7 +114,7 @@ def get_users_cache(zabbix):
     result = zabbix.user.get(output=["alias", "userid"])
     user2userid = {}            # key: user alias, value: userid
     for u in result:
-        user2userid[u['alias']] = u['userid']
+        user2userid[u['alias']] = int(u['userid'])
     return user2userid
 
 def get_mediatype_cache(zabbix):
@@ -122,7 +122,7 @@ def get_mediatype_cache(zabbix):
     result = zabbix.mediatype.get(output=["description", "mediatypeid"])
     mediatype2mediatypeid = {'__ALL__': '0'}  # key: mediatype name, value: mediatypeid
     for mt in result:
-        mediatype2mediatypeid[mt['description']] = mt['mediatypeid']
+        mediatype2mediatypeid[mt['description']] = int(mt['mediatypeid'])
     return mediatype2mediatypeid
 
 def get_screen_cache(zabbix):
@@ -130,7 +130,7 @@ def get_screen_cache(zabbix):
     result = zabbix.screen.get(output=["name", "screenid"])
     screen2screenid = {}  # key: screen name, value: screenid
     for sc in result:
-        screen2screenid[sc['name']] = sc['screenid']
+        screen2screenid[sc['name']] = int(sc['screenid'])
     return screen2screenid
 
 def get_action_cache(zabbix):
@@ -138,7 +138,7 @@ def get_action_cache(zabbix):
     result = zabbix.action.get(output=["name", "actionid"])
     action2actionid = {}        # key: action name, value: actionid
     for a in result:
-        action2actionid[a['name']] = a['actionid']
+        action2actionid[a['name']] = int(a['actionid'])
     return action2actionid
 
 def get_trigger_cache(zabbix):
@@ -146,7 +146,7 @@ def get_trigger_cache(zabbix):
     result = zabbix.trigger.get(output=['description', 'triggerid'], selectHosts=['name'])
     trigger2triggerid = {}        # key: (trigger description, host name), value: triggerid
     for t in result:
-        trigger2triggerid[(t['description'],t['hosts'][0]['name'])] = t['triggerid']
+        trigger2triggerid[(t['description'],t['hosts'][0]['name'])] = int(t['triggerid'])
     return trigger2triggerid
 
 def import_group(zabbix, yml, group2groupid):
@@ -398,13 +398,13 @@ def import_action(zabbix, yml, action2actionid, template2templateid, group2group
                     for opmg in op['opmessage_usr']: opmg['userid'] = usergroup2usergroupid[opmg['userid']]
 
         for condition in yml['filter']['conditions']:
-            if condition['conditiontype'] == '0': # hostgroup
+            if condition['conditiontype'] == 0: # hostgroup
                 condition['value'] = group2groupid[condition['value']]
-            if condition['conditiontype'] == '1': # host
+            if condition['conditiontype'] == 1: # host
                 condition['value'] = host2hostid[condition['value']]
-            if condition['conditiontype'] == '13': # template
+            if condition['conditiontype'] == 13: # template
                 condition['value'] = template2templateid[condition['value']]
-            if condition['conditiontype'] == '2': # trigger
+            if condition['conditiontype'] == 2: # trigger
                 condition['value'] = trigger2triggerid[(condition['value'],condition['value2'])]
                 condition['value2'] = ''
 
