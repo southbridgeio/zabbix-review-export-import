@@ -12,7 +12,7 @@ import anymarkup
 import urllib3
 import yaml
 from pyzabbix import ZabbixAPI
-
+from pprint import pprint
 urllib3.disable_warnings()
 
 
@@ -294,9 +294,8 @@ def main(zabbix_, save_yaml, directory):
                         aa['groupid'] = groupid2group[aa['groupid']]
                         del aa['operationid']
                 if 'opmessage' in op:
-                    for aa in op['opmessage']:
-                        aa['mediatypeid'] = mediatypeid2mediatype[aa['mediatypeid']]
-                        del aa['operationid']
+                    op['opmessage']['mediatypeid'] = mediatypeid2mediatype[p['opmessage']['mediatypeid']]
+                    del op['opmessage']['operationid']
                 if 'opmessage_grp' in op:
                     for aa in op['opmessage_grp']:
                         aa['usrgrpid'] = usergroupid2usergroup[aa['usrgrpid']]

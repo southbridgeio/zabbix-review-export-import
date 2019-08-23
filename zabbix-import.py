@@ -383,7 +383,7 @@ def import_action(zabbix, yml, action2actionid, template2templateid, group2group
                 if 'opgroup' in op:
                     for opg in op['opgroup']: opg['groupid'] = group2groupid[opg['groupid']]
                 if 'opmessage' in op:
-                    for opm in op['opmessage']: opm['mediatypeid'] = mediatype2mediatypeid[opm['mediatypeid']]
+                    op['opmessage']['mediatypeid'] = mediatype2mediatypeid[op['opmessage']['mediatypeid']]
                 if 'opmessage_grp' in op:
                     for opmg in op['opmessage_grp']: opmg['usrgrpid'] = usergroup2usergroupid[opmg['usrgrpid']]
                 if 'opmessage_usr' in op:
