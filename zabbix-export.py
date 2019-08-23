@@ -14,7 +14,6 @@ import yaml
 from pyzabbix import ZabbixAPI
 urllib3.disable_warnings()
 
-
 def remove_none(obj):
     """
     Remove None value from any object
@@ -272,9 +271,22 @@ def main(zabbix_, save_yaml, directory):
     actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend', selectRecoveryOperations='extend', selectAcknowledgeOperations='extend')
     # existing templates
     result = zabbix_.template.get(output=["name", "templateid"])
-    templateid2template = {}    # key: templateid, value template name
+    templateid2template = {}   # key: templateid, value: template name
     for template in result:
         templateid2template[template['templateid']] = template['name']
+    # existing hosts
+    result = zabbix_.host.get(output=["name", "hostid"])
+    hostid2host = {}            # key: hostid, value: host name
+    for host in result:
+        hostid2host[host['hostid']] = host['name']
+    # existing triggers
+    result = zabbix_.trigger.get(output=['description', 'triggerid'], selectHosts=['name'])
+    triggerid2trigger = {} # key: triggerid, value: {description: trigger description, host: host name}
+    for trigger in result:
+        triggerid2trigger[trigger['triggerid']] = {
+            'description': trigger['description'],
+            'host': trigger['hosts'][0]['name'],
+            }
 
     # resolve templateids/groupids/mediatypeids/userids/usergroupids:
     for action in actions:
@@ -303,6 +315,16 @@ def main(zabbix_, save_yaml, directory):
                     for aa in op['opmessage_usr']:
                         aa['userid'] = userid2user[aa['userid']]
                         del aa['operationid']
+        for condition in action['filter']['conditions']:
+            if condition['conditiontype'] == '0': # hostgroup
+                condition['value'] = groupid2group[condition['value']]
+            if condition['conditiontype'] == '1': # host
+                condition['value'] = hostid2host[condition['value']]
+            if condition['conditiontype'] == '13': # template
+                condition['value'] = templateid2template[condition['value']]
+            if condition['conditiontype'] == '2': # trigger
+                condition['value'] = triggerid2trigger[condition['value']]['description']
+                condition['value2'] = triggerid2trigger[condition['value']]['host']
 
     dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
 

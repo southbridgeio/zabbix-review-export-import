@@ -141,6 +141,14 @@ def get_action_cache(zabbix):
         action2actionid[a['name']] = a['actionid']
     return action2actionid
 
+def get_trigger_cache(zabbix):
+    "Return dict trigger name=>triggerid or None on error"
+    result = zabbix.trigger.get(output=['description', 'triggerid'], selectHosts=['name'])
+    trigger2triggerid = {}        # key: (trigger description, host name), value: triggerid
+    for t in result:
+        trigger2triggerid[(t['description'],t['host'][0]['name'])] = t['triggerid']
+    return trigger2triggerid
+
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     g = yml['groups']['group']
@@ -369,7 +377,7 @@ def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
             logging.exception(e)
     return result
 
-def import_action(zabbix, yml, action2actionid, template2templateid, group2groupid, mediatype2mediatypeid, usergroup2usergroupid, user2userid):
+def import_action(zabbix, yml, action2actionid, template2templateid, group2groupid, mediatype2mediatypeid, usergroup2usergroupid, user2userid, host2hostid, trigger2triggerid):
     "Import action from YAML. Return created object, None on error, True if object already exists"
     if yml['name'] in action2actionid: return True # skip existing objects
 
@@ -388,6 +396,17 @@ def import_action(zabbix, yml, action2actionid, template2templateid, group2group
                     for opmg in op['opmessage_grp']: opmg['usrgrpid'] = usergroup2usergroupid[opmg['usrgrpid']]
                 if 'opmessage_usr' in op:
                     for opmg in op['opmessage_usr']: opmg['userid'] = usergroup2usergroupid[opmg['userid']]
+
+        for condition in yml['filter']['conditions']:
+            if condition['conditiontype'] == '0': # hostgroup
+                condition['value'] = group2groupid[condition['value']]
+            if condition['conditiontype'] == '1': # host
+                condition['value'] = host2hostid[condition['value']]
+            if condition['conditiontype'] == '13': # template
+                condition['value'] = template2templateid[condition['value']]
+            if condition['conditiontype'] == '2': # trigger
+                condition['value'] = trigger2triggerid[(condition['value'],condition['value2'])]
+                condition['value2'] = ''
 
         result = zabbix.action.create(yml)
     except ZabbixAPIException as e:
@@ -483,7 +502,7 @@ def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroup
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache):
+def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
     api_version = zabbix_.apiinfo.version()
     logging.debug('Destination Zabbix server version: {}'.format(api_version))
@@ -529,7 +548,7 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
         # elif file_type == 'screen':
         #     op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
         elif file_type == 'action':
-            op_result = import_action(zabbix_, yml, action_cache, template_cache, group_cache, mediatype_cache, usergroup_cache, users_cache)
+            op_result = import_action(zabbix_, yml, action_cache, template_cache, group_cache, mediatype_cache, usergroup_cache, users_cache, host_cache, trigger_cache)
         else:
             logging.error("This file type not yet implemented, exiting...")
     except Exception as e:
@@ -608,6 +627,7 @@ if __name__ == "__main__":
         mediatype2mediatypeid = get_mediatype_cache(zabbix_)
         screen2screenid = get_screen_cache(zabbix_)
         action2actionid = get_action_cache(zabbix_)
+        trigger2triggerid = get_trigger_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
@@ -624,6 +644,7 @@ if __name__ == "__main__":
                 mediatype_cache=mediatype2mediatypeid,
                 screen_cache=screen2screenid,
                 action_cache=action2actionid,
+                trigger_cache=trigger2triggerid,
             )
             if not r: result = False
     except Exception as e:
