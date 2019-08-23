@@ -189,6 +189,8 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing mediatypes...")
     mediatypes = zabbix_.mediatype.get()
+    mediatypeid2mediatype = {}  # key: mediatype name, value: mediatypeid
+    for mt in mediatypes: mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
     dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
 
     logging.info("Processing images...")
@@ -197,6 +199,9 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing usergroups...")
     usergroups = zabbix_.usergroup.get(selectRights='extend')
+    usergroupid2usergroup = {}  # key: usergroupid, value: usergroup name
+    for ug in usergroups:
+        usergroupid2usergroup[ug['usrgrpid']] = ug['name']
 
     # existing hostgroups
     result = zabbix_.hostgroup.get(output=['groupid', 'name'])
@@ -217,6 +222,8 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing users...")
     users = zabbix_.user.get(selectMedias='extend', selectMediatypes='extend', selectUsrgrps='extend')
+    userid2user = {}            # key: userid, value: user alias
+    for u in users: userid2user[u['userid']] = u['alias']
     dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory, drop_keys=["userid", "attempt_clock", "attempt_failed", "attempt_ip"])
 
     logging.info("Processing proxy...")
@@ -241,18 +248,6 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing screens...")
     screens = zabbix_.screen.get(selectUsers='extend', selectUserGroups='extend', selectScreenItems='extend')
-
-    # existing usergroups:
-    result = zabbix_.usergroup.get(output=["name", "usrgrpid"])
-    usergroupid2usergroup = {}  # key: usergroupid, value: usergroup name
-    for ug in result:
-        usergroupid2usergroup[ug['usrgrpid']] = ug['name']
-
-    # existing users:
-    result = zabbix_.user.get(output=["alias", "userid"])
-    userid2user = {}            # key: userid, value: user alias
-    for u in result:
-        userid2user[u['userid']] = u['alias']
 
     # resolve users/usergroups:
     for screen in screens:
@@ -281,11 +276,6 @@ def main(zabbix_, save_yaml, directory):
     templateid2template = {}    # key: templateid, value template name
     for template in result:
         templateid2template[template['templateid']] = template['name']
-    # existing mediatypes
-    result = zabbix_.mediatype.get(output=["description", "mediatypeid"])
-    mediatypeid2mediatype = {}  # key: mediatype name, value: mediatypeid
-    for mt in result:
-        mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
 
     # resolve templateids/groupids/mediatypeids/userids/usergroupids:
     for action in actions:
