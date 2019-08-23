@@ -285,7 +285,7 @@ def main(zabbix_, save_yaml, directory):
     for trigger in result:
         triggerid2trigger[trigger['triggerid']] = {
             'description': trigger['description'],
-            'host': trigger['hosts'][0]['name'],
+            'host': trigger['hosts'][0]['name'] if trigger['hosts'] else "",
             }
 
     # resolve templateids/groupids/mediatypeids/userids/usergroupids:
@@ -323,8 +323,8 @@ def main(zabbix_, save_yaml, directory):
             if condition['conditiontype'] == '13': # template
                 condition['value'] = templateid2template[condition['value']]
             if condition['conditiontype'] == '2': # trigger
-                condition['value'] = triggerid2trigger[condition['value']]['description']
                 condition['value2'] = triggerid2trigger[condition['value']]['host']
+                condition['value'] = triggerid2trigger[condition['value']]['description']
 
     dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
 
