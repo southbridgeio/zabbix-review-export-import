@@ -270,10 +270,10 @@ def main(zabbix_, save_yaml, directory):
     logging.info("Processing action...")
     actions = zabbix_.action.get(selectOperations='extend', selectFilter='extend', selectRecoveryOperations='extend', selectAcknowledgeOperations='extend')
     # existing templates
-    result = zabbix_.template.get(output=["name", "templateid"])
+    result = zabbix_.template.get(output=["host", "templateid"])
     templateid2template = {}   # key: templateid, value: template name
     for template in result:
-        templateid2template[template['templateid']] = template['name']
+        templateid2template[template['templateid']] = template['host']
     # existing hosts
     result = zabbix_.host.get(output=["name", "hostid"])
     hostid2host = {}            # key: hostid, value: host name
