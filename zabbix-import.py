@@ -396,7 +396,7 @@ def import_action(api_version, zabbix, yml, action2actionid, template2templateid
                 if 'opmessage_grp' in op:
                     for opmg in op['opmessage_grp']: opmg['usrgrpid'] = usergroup2usergroupid[opmg['usrgrpid']]
                 if 'opmessage_usr' in op:
-                    for opmg in op['opmessage_usr']: opmg['userid'] = usergroup2usergroupid[opmg['userid']]
+                    for opmg in op['opmessage_usr']: opmg['userid'] = user2userid[opmg['userid']]
 
         for condition in yml['filter']['conditions']:
             if condition['conditiontype'] == 0: # hostgroup
