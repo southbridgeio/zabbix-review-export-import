@@ -120,7 +120,7 @@ def get_users_cache(zabbix):
 def get_mediatype_cache(zabbix):
     "Return dict mediatype=>mediatypeid or None on error"
     result = zabbix.mediatype.get(output=["description", "mediatypeid"])
-    mediatype2mediatypeid = {}  # key: mediatype name, value: mediatypeid
+    mediatype2mediatypeid = {'__ALL__': '0'}  # key: mediatype name, value: mediatypeid
     for mt in result:
         mediatype2mediatypeid[mt['description']] = mt['mediatypeid']
     return mediatype2mediatypeid
@@ -407,7 +407,7 @@ def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2media
         for g in yml['usrgrps']:
             groups.append({"usrgrpid": usergroup2usergroupid[g['name']]})
 
-        mediatypeid2mediatype = {} # key: mediatypeid, value: medeitype name
+        mediatypeid2mediatype = {'0': '__ALL__'} # key: mediatypeid, value: mediatype name
         for mt in yml['mediatypes']:
             mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
 

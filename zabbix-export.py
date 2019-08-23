@@ -12,7 +12,6 @@ import anymarkup
 import urllib3
 import yaml
 from pyzabbix import ZabbixAPI
-from pprint import pprint
 urllib3.disable_warnings()
 
 
@@ -189,7 +188,7 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing mediatypes...")
     mediatypes = zabbix_.mediatype.get()
-    mediatypeid2mediatype = {}  # key: mediatype name, value: mediatypeid
+    mediatypeid2mediatype = {"0": '__ALL__'}  # key: mediatypeid, value: mediatype name
     for mt in mediatypes: mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
     dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
 
@@ -294,7 +293,7 @@ def main(zabbix_, save_yaml, directory):
                         aa['groupid'] = groupid2group[aa['groupid']]
                         del aa['operationid']
                 if 'opmessage' in op:
-                    op['opmessage']['mediatypeid'] = mediatypeid2mediatype[p['opmessage']['mediatypeid']]
+                    op['opmessage']['mediatypeid'] = mediatypeid2mediatype[op['opmessage']['mediatypeid']]
                     del op['opmessage']['operationid']
                 if 'opmessage_grp' in op:
                     for aa in op['opmessage_grp']:
