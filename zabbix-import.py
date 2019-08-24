@@ -189,63 +189,27 @@ def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid, 
         if host['host'] in host2hostid: return True # skip existing objects
 
         # set groupid(s) for new template:
-        if isinstance(host['groups']['group'], dict):
-            groups = [{'groupid': group2groupid[host['groups']['group']['name']]}]
-        else:
-            groups = []
-            for group in host['groups']['group']:
-                groups.append({'groupid': group2groupid[group['name']]})
+        if isinstance(host['groups']['group'], dict): host['groups']['group'] = [host['groups']['group']]
+        groups = [{'groupid': group2groupid[group['name']]} for group in host['groups']['group']]
 
         # set templateid(s) for linked template(s):
         if 'templates' in host:
-            if isinstance(host['templates']['template'], dict):
-                linked_templates = [{'templateid': template2templateid[host['templates']['template']['name']]}]
-            else:
-                linked_templates = []
-                for t in host['templates']['template']:
-                    linked_templates.append({'templateid': template2templateid[t['name']]})
+            if isinstance(host['templates']['template'], dict): host['templates']['template'] = [host['templates']['template']]
+            linked_templates = [{'templateid': template2templateid[t['name']]} for t in host['templates']['template']]
         else:
             linked_templates = ""
 
         # set macroses for new template:
         if 'macros' in host:
-            if isinstance(host['macros']['macro'], dict):
-                macroses = [{"macro": host['macros']['macro']['macro'], "value": host['macros']['macro']['value']}]
-            else:
-                macroses = []
-                for macro in host['macros']['macro']:
-                    macroses.append({
-                        "macro": macro['macro'],
-                        "value": macro['value'],
-                    })
+            if isinstance(host['macros']['macro'], dict): host['macros']['macro'] = [host['macros']['macro']]
+            macroses = [{"macro": macro['macro'], "value": macro['value'] } for macro in host['macros']['macro']]
         else:
             macroses = ""
 
         # set interfaces for new host:
         if 'interfaces' in host:
-            if isinstance(host['interfaces']['interface'], dict):
-                i = host['interfaces']['interface']
-                interfaces = [{
-                    "dns": i['dns'] if 'dns' in i else "",
-                    "ip": i['ip'],
-                    "main": i['default'],
-                    "port": i['port'],
-                    "type": i['type'],
-                    "useip": i['useip'],
-                    "bulk": i['bulk'],
-                }]
-            else:
-                interfaces = []
-                for i in host['interfaces']['interface']:
-                    interfaces.append({
-                        "dns": i['dns'] if 'dns' in i else "",
-                        "ip": i['ip'],
-                        "main": i['default'],
-                        "port": i['port'],
-                        "type": i['type'],
-                        "useip": i['useip'],
-                        "bulk": i['bulk'],
-                    })
+            if isinstance(host['interfaces']['interface'], dict): host['interfaces']['interface'] = [host['interfaces']['interface']]
+            interfaces = [{"dns": i['dns'] if 'dns' in i else "", "ip": i['ip'], "main": i['default'], "port": i['port'], "type": i['type'], "useip": i['useip'], "bulk": i['bulk']} for i in host['interfaces']['interface']]
         else:
             interfaces = ""
 
