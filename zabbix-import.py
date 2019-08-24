@@ -236,16 +236,17 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
 
         new_hostid = result['hostids'][0] # ID of created host
 
-        if 'applications' in host: # resolve/create applications
-            if isinstance(host['applications']['application'], dict): host['applications']['application'] = [host['applications']['application']]
-            apps = zabbix.application.get(hostids=new_hostid, output=['name', 'applicationid'])
-            app2id = {}         # key: app name, value: app id
-            for app in apps:
-                app2id[app['name']] = app['applicationid']
-            for app in host['applications']['application']:
-                if app['name'] not in app2id:
-                    new_app = zabbix.application.create(name=app['name'], hostid=new_hostid) # create missed apps
-                    app2id[app['name']] = new_app['applicationids'][0] # save new app id for future use in items
+        if 'applications' not in host:
+            host['applications'] = {'application': []}
+        if isinstance(host['applications']['application'], dict): host['applications']['application'] = [host['applications']['application']]
+        apps = zabbix.application.get(hostids=new_hostid, output=['name', 'applicationid'])
+        app2id = {}         # key: app name, value: app id
+        for app in apps:
+            app2id[app['name']] = app['applicationid']
+        for app in host['applications']['application']:
+            if app['name'] not in app2id:
+                new_app = zabbix.application.create(name=app['name'], hostid=new_hostid) # create missed apps
+                app2id[app['name']] = new_app['applicationids'][0] # save new app id for future use in items
 
         if 'items' in host:
             # hack: use default interface for items
@@ -256,8 +257,12 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 if 'applications' in item:
                     if isinstance(item['applications']['application'], dict):
                         item['applications']['application'] = [item['applications']['application']]
+                else:
+                    item['applications'] = {'application': []}
                 if 'preprocessing' in item:
                     if isinstance(item['preprocessing']['step'], dict): item['preprocessing']['step'] = [item['preprocessing']['step']]
+                    for step in item['preprocessing']['step']:
+                        if 'params' not in step: step['params'] = ''
                     if api_version >= parse_version("4.0"):
                         for step in item['preprocessing']['step']:
                             if 'error_handler' not in step: step['error_handler'] = 0
@@ -287,9 +292,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
         # TBD/TODO/FIXME:
         # - httptests
         # - triggers
-        # - items
         # - discovery_rules
-        # - applications?
         # - graphs
     except ZabbixAPIException as e:
         if 'already exists' in str(e):
