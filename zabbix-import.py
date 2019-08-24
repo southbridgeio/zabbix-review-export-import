@@ -12,7 +12,7 @@ import yaml
 from pyzabbix import ZabbixAPI, ZabbixAPIException
 from pprint import pprint, pformat
 import random, string
-from re import match
+from pkg_resources import parse_version
 
 def randompassword():
     return ''.join([random.choice(string.printable) for _ in range(random.randint(8, 10))])
@@ -181,7 +181,7 @@ def import_proxy(zabbix, yml, proxy2proxyid):
             logging.error(e)
     return result
 
-def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid, host2hostid):
+def import_host(api_version, zabbix, yml, group2groupid, template2templateid, proxy2proxyid, host2hostid):
     "Import host from YAML. Return created object, None on error, True if object already exists"
     result = None
     try:
@@ -254,6 +254,13 @@ def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid, 
                 if 'applications' in item:
                     if isinstance(item['applications']['application'], dict):
                         item['applications']['application'] = [item['applications']['application']]
+                if 'preprocessing' in item:
+                    if isinstance(item['preprocessing']['step'], dict): item['preprocessing']['step'] = [item['preprocessing']['step']]
+                    if api_version >= parse_version("4.0"):
+                        for step in item['preprocessing']['step']:
+                            if 'error_handler' not in step: step['error_handler'] = 0
+                            if 'error_handler_params' not in step: step['error_handler_params'] = ""
+
                 new_item = zabbix.item.create({
                     "delay": item['delay'],
                     "hostid": new_hostid,
@@ -265,7 +272,7 @@ def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid, 
                     "history": item['history'],
                     "trends": item['trends'],
                     "status": item['status'],
-                    "units": item['units'],
+                    "units": item['units'] if 'units' in item else "",
                     "authtype": item['authtype'],
                     "description": item['description'] if 'description' in item else "",
                     "snmpv3_securitylevel": item['snmpv3_securitylevel'],
@@ -410,9 +417,9 @@ def import_action(api_version, zabbix, yml, action2actionid, template2templateid
             if condition['conditiontype'] == 2: # trigger
                 condition['value'] = trigger2triggerid[(condition['value'],condition['value2'])]
                 condition['value2'] = ''
-            if condition['conditiontype'] == 16 and condition['operator'] == 7 and match("4\.", api_version) :# not in maintenance/suppression
+            if condition['conditiontype'] == 16 and condition['operator'] == 7 and api_version >= parse_version("4"):# not in maintenance/suppression
                 condition['operator'] = 11 # new in 4.x: see https://www.zabbix.com/documentation/4.2/manual/api/reference/action/object#action_filter_condition
-            if condition['conditiontype'] == 16 and condition['operator'] == 4 and match("4\.", api_version): # in maintenance/suppression
+            if condition['conditiontype'] == 16 and condition['operator'] == 4 and api_version >= parse_version("4"): # in maintenance/suppression
                 condition['operator'] = 10 # new in 4.x: see https://www.zabbix.com/documentation/4.2/manual/api/reference/action/object#action_filter_condition
 
         result = zabbix.action.create(yml)
@@ -511,7 +518,7 @@ def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroup
 
 def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
-    api_version = zabbix_.apiinfo.version()
+    api_version = parse_version(zabbix_.apiinfo.version())
     logging.debug('Destination Zabbix server version: {}'.format(api_version))
 
     with open(yaml_file, 'r') as f:
@@ -546,7 +553,7 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
         elif file_type == "proxy":
             op_result = import_proxy(zabbix_, yml, proxy_cache)
         elif file_type == "host":
-            op_result = import_host(zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache)
+            op_result = import_host(api_version, zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache)
         elif file_type == "usergroup":
             op_result = import_usergroup(zabbix_, yml, group_cache, usergroup_cache)
         elif file_type == "user":
