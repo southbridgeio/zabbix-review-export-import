@@ -281,7 +281,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     "snmpv3_authprotocol": item['snmpv3_authprotocol'],
                     "snmpv3_privprotocol": item['snmpv3_privprotocol'],
                     "applications": [app2id[x['name']] for x in item['applications']['application']],
-                    "preprocessing": item['preprocessing']['step'] if 'preprocessing' in item else "" ,
+                    "preprocessing": item['preprocessing']['step'] if 'preprocessing' in item else [],
                 })
 
         # TBD/TODO/FIXME:
