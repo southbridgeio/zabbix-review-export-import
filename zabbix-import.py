@@ -267,6 +267,49 @@ def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid, 
             "groups": groups,
             })
         logging.debug(pformat(result))
+
+        new_hostid = result['hostids'][0] # ID of created host
+
+        if 'applications' in host: # resolve/create applications
+            if isinstance(host['applications']['application'], dict): host['applications']['application'] = [host['applications']['application']]
+            apps = zabbix.application.get(hostids=new_hostid, output=['name', 'applicationid'])
+            app2id = {}         # key: app name, value: app id
+            for app in apps:
+                app2id[app['name']] = app['applicationid']
+            for app in host['applications']['application']:
+                if app['name'] not in app2id:
+                    new_app = zabbix.application.create(name=app['name'], hostid=new_hostid) # create missed apps
+                    app2id[app['name']] = new_app['applicationids'][0] # save new app id for future use in items
+
+        if 'items' in host:
+            # hack: use default interface for items
+            iface = zabbix.hostinterface.get(output="interfaceid", hostids=new_hostid, filter={"main": 1})
+            if isinstance(host['items']['item'], dict): host['items']['item'] = [host['items']['item']]
+
+            for item in host['items']['item']:
+                if 'applications' in item:
+                    if isinstance(item['applications']['application'], dict):
+                        item['applications']['application'] = [item['applications']['application']]
+                new_item = zabbix.item.create({
+                    "delay": item['delay'],
+                    "hostid": new_hostid,
+                    "interfaceid": iface[0]['interfaceid'],
+                    "key_": item['key'],
+                    "name": item['name'],
+                    "type": item['type'],
+                    "value_type": item['value_type'],
+                    "history": item['history'],
+                    "trends": item['trends'],
+                    "status": item['status'],
+                    "units": item['units'],
+                    "authtype": item['authtype'],
+                    "description": item['description'],
+                    "snmpv3_securitylevel": item['snmpv3_securitylevel'],
+                    "snmpv3_authprotocol": item['snmpv3_authprotocol'],
+                    "snmpv3_privprotocol": item['snmpv3_privprotocol'],
+                    "applications": [app2id[x['name']] for x in item['applications']['application']],
+                })
+
         # TBD/TODO/FIXME:
         # - httptests
         # - triggers
