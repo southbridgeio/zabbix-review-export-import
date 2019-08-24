@@ -285,6 +285,8 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     "snmpv3_securitylevel": item['snmpv3_securitylevel'],
                     "snmpv3_authprotocol": item['snmpv3_authprotocol'],
                     "snmpv3_privprotocol": item['snmpv3_privprotocol'],
+                    "snmp_community": item['snmp_community'] if 'snmp_community' in item else "",
+                    "snmp_oid": item['snmp_oid'] if 'snmp_oid' in item else "",
                     "applications": [app2id[x['name']] for x in item['applications']['application']],
                     "preprocessing": item['preprocessing']['step'] if 'preprocessing' in item else [],
                 })
