@@ -331,12 +331,6 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
             "macros": macroses,
         })
         logging.debug(pformat(result))
-        # FIXME/TBD/TODO:
-        # - items
-        # - triggers
-        # - discovery_rules
-        # - applications?
-        # - graphs
     except ZabbixAPIException as e:
         if 'already exist' in str(e):
             result = True
