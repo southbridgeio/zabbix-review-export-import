@@ -338,6 +338,19 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     "preprocessing": item['preprocessing']['step'] if 'preprocessing' in item else [],
                 })
 
+        if 'httptests' in host:
+            if isinstance(host['httptests']['httptest'], dict): host['httptests']['httptest'] = [host['httptests']['httptest']]
+            for httptest in host['httptests']['httptest']:
+                if isinstance(httptest['steps']['step'], dict): httptest['steps']['step'] = [httptest['steps']['step']]
+                new_httptest = zabbix.httptest.create({
+                    "name": httptest['name'],
+                    "hostid": new_hostid,
+                    "delay": ,
+                    "": ,
+                    "": ,
+                    "": ,
+                })
+
         # TBD/TODO/FIXME:
         # - httptests
         # - triggers
