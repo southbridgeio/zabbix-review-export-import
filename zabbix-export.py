@@ -209,13 +209,7 @@ def main(zabbix_, save_yaml, directory):
 
     # resolve hostgroupids:
     for usergroup in usergroups:
-        resolved_rights = []
-        for r in usergroup['rights']:
-            resolved_rights.append({
-                "id": groupid2group[r['id']],
-                "permission": r['permission'],
-            })
-        usergroup['rights'] = resolved_rights
+        usergroup['rights'] = [{"id": groupid2group[r['id']], "permission": r['permission']} for r in usergroup['rights']]
     dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory, drop_keys=["usrgrpid"])
 
     logging.info("Processing users...")
@@ -250,20 +244,8 @@ def main(zabbix_, save_yaml, directory):
     # resolve users/usergroups:
     for screen in screens:
         screen['userid'] = userid2user[screen['userid']]
-        resolved_users = []
-        resolved_groups = []
-        for user in screen['users']:
-            resolved_users.append({
-                'permission': user['permission'],
-                'userid': userid2user[user['userid']],
-            })
-        screen['users'] = resolved_users
-        for group in screen['userGroups']:
-            resolved_groups.append({
-                "permission": group['permission'],
-                "usrgrpid": usergroupid2usergroup[group['usrgrpid']],
-            })
-        screen['userGroups'] = resolved_groups
+        screen['users'] = [{'permission': user['permission'], 'userid': userid2user[user['userid']]} for user in screen['users']]
+        screen['userGroups'] = [{"permission": group['permission'], "usrgrpid": usergroupid2usergroup[group['usrgrpid']]} for group in screen['userGroups']]
 
     dumps_json(object='screens', data=screens, save_yaml=save_yaml, directory=directory, drop_keys=["screenid"])
 
