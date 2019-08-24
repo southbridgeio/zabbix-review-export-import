@@ -267,11 +267,12 @@ def import_host(zabbix, yml, group2groupid, template2templateid, proxy2proxyid, 
                     "status": item['status'],
                     "units": item['units'],
                     "authtype": item['authtype'],
-                    "description": item['description'],
+                    "description": item['description'] if 'description' in item else "",
                     "snmpv3_securitylevel": item['snmpv3_securitylevel'],
                     "snmpv3_authprotocol": item['snmpv3_authprotocol'],
                     "snmpv3_privprotocol": item['snmpv3_privprotocol'],
                     "applications": [app2id[x['name']] for x in item['applications']['application']],
+                    "preprocessing": item['preprocessing']['step'] if 'preprocessing' in item else "" ,
                 })
 
         # TBD/TODO/FIXME:
