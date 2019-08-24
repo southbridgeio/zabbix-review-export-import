@@ -253,7 +253,8 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
             iface = zabbix.hostinterface.get(output="interfaceid", hostids=new_hostid, filter={"main": 1})
             if isinstance(host['items']['item'], dict): host['items']['item'] = [host['items']['item']]
 
-            for item in host['items']['item']:
+            # create non-dependent items:
+            for item in filter(lambda x: x['type'] != 18,host['items']['item']):
                 if 'applications' in item:
                     if isinstance(item['applications']['application'], dict):
                         item['applications']['application'] = [item['applications']['application']]
@@ -279,6 +280,52 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     "history": item['history'],
                     "trends": item['trends'],
                     "status": item['status'],
+                    "units": item['units'] if 'units' in item else "",
+                    "authtype": item['authtype'],
+                    "description": item['description'] if 'description' in item else "",
+                    "snmpv3_securitylevel": item['snmpv3_securitylevel'],
+                    "snmpv3_authprotocol": item['snmpv3_authprotocol'],
+                    "snmpv3_privprotocol": item['snmpv3_privprotocol'],
+                    "snmp_community": item['snmp_community'] if 'snmp_community' in item else "",
+                    "snmp_oid": item['snmp_oid'] if 'snmp_oid' in item else "",
+                    "applications": [app2id[x['name']] for x in item['applications']['application']],
+                    "preprocessing": item['preprocessing']['step'] if 'preprocessing' in item else [],
+                })
+
+            # fetch itemids for master items:
+            key2itemid = {}     # key: item key, value: itemid
+            if list(filter(lambda x: x['type'] == 18,host['items']['item'])): # only fetch itemids if there is dependent items
+                for item in zabbix.item.get(output=["key_", "itemid"], hostids=new_hostid):
+                    key2itemid[item['key_']] = item['itemid']
+
+            # create dependent items:
+            for item in filter(lambda x: x['type'] == 18,host['items']['item']):
+                if 'applications' in item:
+                    if isinstance(item['applications']['application'], dict):
+                        item['applications']['application'] = [item['applications']['application']]
+                else:
+                    item['applications'] = {'application': []}
+                if 'preprocessing' in item:
+                    if isinstance(item['preprocessing']['step'], dict): item['preprocessing']['step'] = [item['preprocessing']['step']]
+                    for step in item['preprocessing']['step']:
+                        if 'params' not in step: step['params'] = ''
+                    if api_version >= parse_version("4.0"):
+                        for step in item['preprocessing']['step']:
+                            if 'error_handler' not in step: step['error_handler'] = 0
+                            if 'error_handler_params' not in step: step['error_handler_params'] = ""
+
+                new_item = zabbix.item.create({
+                    "delay": item['delay'],
+                    "hostid": new_hostid,
+                    "interfaceid": iface[0]['interfaceid'],
+                    "key_": item['key'],
+                    "name": item['name'],
+                    "type": item['type'],
+                    "value_type": item['value_type'],
+                    "history": item['history'],
+                    "trends": item['trends'],
+                    "status": item['status'],
+                    "master_itemid": key2itemid[item['master_item']['key']],
                     "units": item['units'] if 'units' in item else "",
                     "authtype": item['authtype'],
                     "description": item['description'] if 'description' in item else "",
