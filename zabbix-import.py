@@ -164,6 +164,7 @@ def import_group(zabbix, yml, group2groupid):
             result = True
         else:
             logging.error(e)
+            result = False
     return result
 
 def import_proxy(zabbix, yml, proxy2proxyid):
@@ -179,6 +180,7 @@ def import_proxy(zabbix, yml, proxy2proxyid):
             result = True
         else:
             logging.error(e)
+            result = False
     return result
 
 def import_host(api_version, zabbix, yml, group2groupid, template2templateid, proxy2proxyid, host2hostid):
@@ -294,6 +296,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
             result = True
         else:
             logging.error(e)
+            result = False
     return result
 
 def import_template(zabbix, yml, group2groupid, template2templateid):
