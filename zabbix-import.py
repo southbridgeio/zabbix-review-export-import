@@ -409,9 +409,9 @@ def import_action(api_version, zabbix, yml, action2actionid, template2templateid
                 condition['value'] = trigger2triggerid[(condition['value'],condition['value2'])]
                 condition['value2'] = ''
             if condition['conditiontype'] == 16 and condition['operator'] == 7 and match("4\.", api_version) :# not in maintenance/suppression
-                condition['operator'] = 11
+                condition['operator'] = 11 # new in 4.x: see https://www.zabbix.com/documentation/4.2/manual/api/reference/action/object#action_filter_condition
             if condition['conditiontype'] == 16 and condition['operator'] == 4 and match("4\.", api_version): # in maintenance/suppression
-                condition['operator'] = 10
+                condition['operator'] = 10 # new in 4.x: see https://www.zabbix.com/documentation/4.2/manual/api/reference/action/object#action_filter_condition
 
         result = zabbix.action.create(yml)
     except ZabbixAPIException as e:
