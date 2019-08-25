@@ -728,16 +728,49 @@ if __name__ == "__main__":
 
     try:
         # Fill caches:
-        group2groupid = get_hostgroups_cache(zabbix_)
-        template2templateid = get_template_cache(zabbix_)
-        proxy2proxyid = get_proxy_cache(zabbix_)
-        host2hostid = get_hosts_cache(zabbix_)
-        usergroup2usergroupid = get_usergroup_cache(zabbix_)
-        user2userid = get_users_cache(zabbix_)
-        mediatype2mediatypeid = get_mediatype_cache(zabbix_)
-        screen2screenid = get_screen_cache(zabbix_)
-        action2actionid = get_action_cache(zabbix_)
-        trigger2triggerid = get_trigger_cache(zabbix_)
+        group2groupid = {}
+        template2templateid = {}
+        proxy2proxyid = {}
+        host2hostid = {}
+        usergroup2usergroupid = {}
+        user2userid = {}
+        mediatype2mediatypeid = {}
+        screen2screenid = {}
+        action2actionid = {}
+        trigger2triggerid = {}
+
+        # load only needed caches:
+        if args.type in ('group', 'host', 'template', 'usergroup', 'action'):
+            group2groupid = get_hostgroups_cache(zabbix_)
+        elif args.type in ('host', 'template', 'action'):
+            template2templateid = get_template_cache(zabbix_)
+        elif args.type in ('proxy', 'host'):
+            proxy2proxyid = get_proxy_cache(zabbix_)
+        elif args.type in ('host', 'action'):
+            host2hostid = get_hosts_cache(zabbix_)
+        elif args.type in ('usergroup', 'action', 'user', 'screen'):
+            usergroup2usergroupid = get_usergroup_cache(zabbix_)
+        elif args.type in ('action', 'user', 'screen'):
+            user2userid = get_users_cache(zabbix_)
+        elif args.type in ('action', 'user'):
+            mediatype2mediatypeid = get_mediatype_cache(zabbix_)
+        elif args.type in ('screen'):
+            screen2screenid = get_screen_cache(zabbix_)
+        elif args.type in ('action'):
+            action2actionid = get_action_cache(zabbix_)
+        elif args.type in ('action'):
+            trigger2triggerid = get_trigger_cache(zabbix_)
+        else:                   # autoguess - load all caches
+            group2groupid = get_hostgroups_cache(zabbix_)
+            template2templateid = get_template_cache(zabbix_)
+            proxy2proxyid = get_proxy_cache(zabbix_)
+            host2hostid = get_hosts_cache(zabbix_)
+            usergroup2usergroupid = get_usergroup_cache(zabbix_)
+            user2userid = get_users_cache(zabbix_)
+            mediatype2mediatypeid = get_mediatype_cache(zabbix_)
+            screen2screenid = get_screen_cache(zabbix_)
+            action2actionid = get_action_cache(zabbix_)
+            trigger2triggerid = get_trigger_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
