@@ -183,7 +183,7 @@ def import_proxy(zabbix, yml, proxy2proxyid):
             result = False
     return result
 
-def import_host(api_version, zabbix, yml, group2groupid, template2templateid, proxy2proxyid, host2hostid, trigger2triggerid):
+def import_host(api_version, zabbix, yml, group2groupid, template2templateid, proxy2proxyid, host2hostid):
     "Import host from YAML. Return created object, None on error, True if object already exists"
     result = None
     try:
@@ -381,6 +381,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 })
 
         if 'triggers' in yml:
+            trigger2triggerid = get_trigger_cache(zabbix) # get fresh trigger cache
             if isinstance(yml['triggers']['trigger'], dict): yml['triggers']['trigger'] = [yml['triggers']['trigger']]
             for trigger in yml['triggers']['trigger']:
                 trigger['comments'] = trigger['description'] if 'description' in trigger else ""
@@ -388,10 +389,12 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 del trigger['name']
                 if 'url' in trigger:
                     if '://' not in trigger['url']: trigger['url'] = "https://" + trigger['url'] # add missed scheme if needed
+                if 'dependencies' in trigger: # resolve dependencies
+                    if isinstance(trigger['dependencies']['dependency'], dict): trigger['dependencies']['dependency'] = [trigger['dependencies']['dependency']]
+                    trigger['dependencies'] = [{"triggerid": trigger2triggerid[(x['name'],host['name'])]} for x in trigger['dependencies']['dependency']]
                 new_trigger = zabbix.trigger.create(trigger)
 
         # TBD/TODO/FIXME:
-        # - triggers
         # - discovery_rules
         # - graphs
     except ZabbixAPIException as e:
@@ -659,7 +662,7 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
         elif file_type == "proxy":
             op_result = import_proxy(zabbix_, yml, proxy_cache)
         elif file_type == "host":
-            op_result = import_host(api_version, zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache, trigger_cache)
+            op_result = import_host(api_version, zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache)
         elif file_type == "usergroup":
             op_result = import_usergroup(zabbix_, yml, group_cache, usergroup_cache)
         elif file_type == "user":
@@ -768,7 +771,7 @@ if __name__ == "__main__":
             screen2screenid = get_screen_cache(zabbix_)
         if args.type in ('autoguess', 'action'):
             action2actionid = get_action_cache(zabbix_)
-        if args.type in ('autoguess', 'action', 'host'):
+        if args.type in ('autoguess', 'action'):
             trigger2triggerid = get_trigger_cache(zabbix_)
 
         for f in args.FILE:
