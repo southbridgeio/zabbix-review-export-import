@@ -354,6 +354,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                         step['query_fields'] = step['query_fields']['query_field']
                         for field in step['query_fields']:
                             if 'value' not in field: field['value'] = "" # add missing "value" field
+                            field["value"] = str(field["value"]) # convert to string
 
                 new_httptest = zabbix.httptest.create({
                     "name": test['name'],
