@@ -380,9 +380,15 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     "verify_peer": test['verify_peer'] if 'verify_peer' in test else 0,
                 })
 
-        if 'triggers' in host:
-            if isinstance(host['triggers']['trigger'], dict): host['triggers']['trigger'] = [host['triggers']['trigger']]
-            new_trigger = zabbix.trigger.create(host['triggers']['trigger'])
+        if 'triggers' in yml:
+            if isinstance(yml['triggers']['trigger'], dict): yml['triggers']['trigger'] = [yml['triggers']['trigger']]
+            for trigger in yml['triggers']['trigger']:
+                trigger['comments'] = trigger['description'] if 'description' in trigger else ""
+                trigger['description'] = trigger['name']
+                del trigger['name']
+                if 'url' in trigger:
+                    if '://' not in trigger['url']: trigger['url'] = "https://" + trigger['url'] # add missed scheme if needed
+                new_trigger = zabbix.trigger.create(trigger)
 
         # TBD/TODO/FIXME:
         # - triggers
