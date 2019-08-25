@@ -381,7 +381,6 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 })
 
         # TBD/TODO/FIXME:
-        # - httptests
         # - triggers
         # - discovery_rules
         # - graphs
