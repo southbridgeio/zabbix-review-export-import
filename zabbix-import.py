@@ -183,7 +183,7 @@ def import_proxy(zabbix, yml, proxy2proxyid):
             result = False
     return result
 
-def import_host(api_version, zabbix, yml, group2groupid, template2templateid, proxy2proxyid, host2hostid):
+def import_host(api_version, zabbix, yml, group2groupid, template2templateid, proxy2proxyid, host2hostid, trigger2triggerid):
     "Import host from YAML. Return created object, None on error, True if object already exists"
     result = None
     try:
@@ -379,6 +379,10 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     "verify_host": test['verify_host'] if 'verify_host' in test else 0,
                     "verify_peer": test['verify_peer'] if 'verify_peer' in test else 0,
                 })
+
+        if 'triggers' in host:
+            if isinstance(host['triggers']['trigger'], dict): host['triggers']['trigger'] = [host['triggers']['trigger']]
+            new_trigger = zabbix.trigger.create(host['triggers']['trigger'])
 
         # TBD/TODO/FIXME:
         # - triggers
@@ -649,7 +653,7 @@ def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache
         elif file_type == "proxy":
             op_result = import_proxy(zabbix_, yml, proxy_cache)
         elif file_type == "host":
-            op_result = import_host(api_version, zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache)
+            op_result = import_host(api_version, zabbix_, yml, group_cache, template_cache, proxy_cache, host_cache, trigger_cache)
         elif file_type == "usergroup":
             op_result = import_usergroup(zabbix_, yml, group_cache, usergroup_cache)
         elif file_type == "user":
@@ -740,36 +744,25 @@ if __name__ == "__main__":
         trigger2triggerid = {}
 
         # load only needed caches:
-        if args.type in ('group', 'host', 'template', 'usergroup', 'action'):
+        if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action'):
             group2groupid = get_hostgroups_cache(zabbix_)
-        elif args.type in ('host', 'template', 'action'):
+        if args.type in ('autoguess', 'host', 'template', 'action'):
             template2templateid = get_template_cache(zabbix_)
-        elif args.type in ('proxy', 'host'):
+        if args.type in ('autoguess', 'proxy', 'host'):
             proxy2proxyid = get_proxy_cache(zabbix_)
-        elif args.type in ('host', 'action'):
+        if args.type in ('autoguess', 'host', 'action'):
             host2hostid = get_hosts_cache(zabbix_)
-        elif args.type in ('usergroup', 'action', 'user', 'screen'):
+        if args.type in ('autoguess', 'usergroup', 'action', 'user', 'screen'):
             usergroup2usergroupid = get_usergroup_cache(zabbix_)
-        elif args.type in ('action', 'user', 'screen'):
+        if args.type in ('autoguess', 'action', 'user', 'screen'):
             user2userid = get_users_cache(zabbix_)
-        elif args.type in ('action', 'user'):
+        if args.type in ('autoguess', 'action', 'user'):
             mediatype2mediatypeid = get_mediatype_cache(zabbix_)
-        elif args.type in ('screen'):
+        if args.type in ('autoguess', 'screen'):
             screen2screenid = get_screen_cache(zabbix_)
-        elif args.type in ('action'):
+        if args.type in ('autoguess', 'action'):
             action2actionid = get_action_cache(zabbix_)
-        elif args.type in ('action'):
-            trigger2triggerid = get_trigger_cache(zabbix_)
-        else:                   # autoguess - load all caches
-            group2groupid = get_hostgroups_cache(zabbix_)
-            template2templateid = get_template_cache(zabbix_)
-            proxy2proxyid = get_proxy_cache(zabbix_)
-            host2hostid = get_hosts_cache(zabbix_)
-            usergroup2usergroupid = get_usergroup_cache(zabbix_)
-            user2userid = get_users_cache(zabbix_)
-            mediatype2mediatypeid = get_mediatype_cache(zabbix_)
-            screen2screenid = get_screen_cache(zabbix_)
-            action2actionid = get_action_cache(zabbix_)
+        if args.type in ('autoguess', 'action', 'host'):
             trigger2triggerid = get_trigger_cache(zabbix_)
 
         for f in args.FILE:
