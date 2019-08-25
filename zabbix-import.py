@@ -340,15 +340,39 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
 
         if 'httptests' in host:
             if isinstance(host['httptests']['httptest'], dict): host['httptests']['httptest'] = [host['httptests']['httptest']]
-            for httptest in host['httptests']['httptest']:
-                if isinstance(httptest['steps']['step'], dict): httptest['steps']['step'] = [httptest['steps']['step']]
+            for test in host['httptests']['httptest']:
+                if isinstance(test['steps']['step'], dict): test['steps']['step'] = [test['steps']['step']]
+                if 'headers' in test:
+                    if isinstance(test['headers']['header'], dict): test['headers']['header'] = [test['headers']['header']]
+                no = 0
+                for step in test['steps']['step']:
+                    if 'no' not in step: step['no'] = no # step counter
+                    step['status_codes'] = str(step['status_codes']) # convert to string
+                    if 'required' in step: step['required'] = str(step['required'])
+                    if 'query_fields' in step:
+                        if isinstance(step['query_fields']['query_field'], dict): step['query_fields']['query_field'] = [step['query_fields']['query_field']]
+                        step['query_fields'] = step['query_fields']['query_field']
+                        for field in step['query_fields']:
+                            if 'value' not in field: field['value'] = "" # add missing "value" field
+
                 new_httptest = zabbix.httptest.create({
-                    "name": httptest['name'],
+                    "name": test['name'],
                     "hostid": new_hostid,
-                    "delay": ,
-                    "": ,
-                    "": ,
-                    "": ,
+                    "delay": test['delay'] if 'delay' in test else "1m",
+                    "headers": test['headers']['header'] if 'headers' in test else [],
+                    "retries": test['attempts'],
+                    "steps": test['steps']['step'],
+                    "agent": test['agent'] if 'agent' in test else "Zabbix",
+                    "status": test['status'] if 'status' in test else 0,
+                    "authentication": test['authentication'] if 'authentication' in test else 0,
+                    "http_password": test['http_password'] if 'http_password' in test else "",
+                    "http_proxy": test['http_proxy'] if 'http_proxy' in test else "",
+                    "http_user": test['http_user'] if 'http_user' in test else "",
+                    "ssl_cert_file": test['ssl_cert_file'] if 'ssl_cert_file' in test else "",
+                    "ssl_key_file": test['ssl_key_file'] if 'ssl_key_file' in test else "",
+                    "ssl_key_password": test['ssl_key_password'] if 'ssl_key_password' in test else "",
+                    "verify_host": test['verify_host'] if 'verify_host' in test else 0,
+                    "verify_peer": test['verify_peer'] if 'verify_peer' in test else 0,
                 })
 
         # TBD/TODO/FIXME:
