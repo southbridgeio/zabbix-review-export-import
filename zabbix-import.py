@@ -440,7 +440,18 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                         new_item_prot = zabbix.itemprototype.create(item_prot)
 
                 if 'trigger_prototypes' in rule:
-                    del rule['trigger_prototypes'] # FIXME: add trigger prototypes
+                    if isinstance(rule['trigger_prototypes']['trigger_prototype'], dict): rule['trigger_prototypes']['trigger_prototype'] = [rule['trigger_prototypes']['trigger_prototype']]
+                    for trigger_prot in rule['trigger_prototypes']['trigger_prototype']:
+                        trigger_prot['comments'] = trigger_prot['description'] if 'description' in trigger_prot else ""
+                        trigger_prot['description'] = trigger_prot['name']
+                        del trigger_prot['name']
+                        if 'url' in trigger_prot:
+                            if '://' not in trigger_prot['url']: trigger_prot['url'] = "https://" + trigger_prot['url'] # add missed scheme if needed
+                        if 'dependencies' in trigger_prot: # resolve dependencies
+                            if isinstance(trigger_prot['dependencies']['dependency'], dict): trigger_prot['dependencies']['dependency'] = [trigger_prot['dependencies']['dependency']]
+                            trigger_prot['dependencies'] = [{"triggerid": trigger2triggerid[(x['name'],host['name'])]} for x in trigger_prot['dependencies']['dependency']]
+                        new_trigger_prot = zabbix.triggerprototype.create(trigger_prot)
+
 
                 if 'graph_prototypes' in rule:
                     del rule['graph_prototypes'] # FIXME: add graph prototypes
