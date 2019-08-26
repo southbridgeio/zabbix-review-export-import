@@ -464,6 +464,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                             if 'item' in gitem:
                                 gitem['itemid'] = key2itemid[gitem['item']['key']]
                                 del gitem['item']
+                                gitem['color'] = str(gitem['color']).zfill(6)
                         graph_prot['gitems'] = graph_prot['graph_items']['graph_item']
                         del graph_prot['graph_items']['graph_item']
                         new_graph_prot = zabbix.graphprototype.create(graph_prot)
