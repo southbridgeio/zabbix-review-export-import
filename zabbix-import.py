@@ -251,6 +251,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
         if 'items' in host or 'discovery_rules' in host:
             # hack: use default interface for items
             iface = zabbix.hostinterface.get(output="interfaceid", hostids=new_hostid, filter={"main": 1})
+            new_ifaceid = iface[0]['interfaceid']
 
         if 'items' in host:
             if isinstance(host['items']['item'], dict): host['items']['item'] = [host['items']['item']]
@@ -274,7 +275,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 new_item = zabbix.item.create({
                     "delay": item['delay'],
                     "hostid": new_hostid,
-                    "interfaceid": iface[0]['interfaceid'],
+                    "interfaceid": new_ifaceid,
                     "key_": item['key'],
                     "name": item['name'],
                     "type": item['type'],
@@ -319,7 +320,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 new_item = zabbix.item.create({
                     "delay": item['delay'],
                     "hostid": new_hostid,
-                    "interfaceid": iface[0]['interfaceid'],
+                    "interfaceid": new_ifaceid,
                     "key_": item['key'],
                     "name": item['name'],
                     "type": item['type'],
@@ -401,7 +402,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
             for rule in host['discovery_rules']['discovery_rule']:
                 rule['delay'] = str(rule['delay']) # convert to string
                 rule['hostid'] = new_hostid
-                rule['interfaceid'] = iface[0]['interfaceid']
+                rule['interfaceid'] = new_ifaceid
                 rule['key_'] = rule['key']
                 del rule['key']
                 if 'filter' in rule:
@@ -411,14 +412,38 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     if isinstance(rule['filter']['conditions']['condition'], dict): rule['filter']['conditions']['condition'] = [rule['filter']['conditions']['condition']]
                     rule['filter']['conditions'] = rule['filter']['conditions']['condition']
 
+                new_rule = zabbix.discoveryrule.create(rule)
+                new_ruleid = new_rule['itemids'][0]
+
                 if 'item_prototypes' in rule:
-                    del rule['item_prototypes']  # FIXME: add item prototypes
+                    if isinstance(rule['item_prototypes']['item_prototype'], dict): rule['item_prototypes']['item_prototype'] = [rule['item_prototypes']['item_prototype']]
+                    for item_prot in rule['item_prototypes']['item_prototype']:
+                        item_prot['ruleid'] = new_ruleid
+                        item_prot['key_'] = item_prot['key']
+                        del item_prot['key']
+                        item_prot['hostid'] = new_hostid
+                        item_prot['interfaceid'] = new_ifaceid
+
+                        if 'preprocessing' in item_prot:
+                            if isinstance(item_prot['preprocessing']['step'], dict): item_prot['preprocessing']['step'] = [item_prot['preprocessing']['step']]
+                            for step in item_prot['preprocessing']['step']:
+                                if 'params' not in step: step['params'] = ''
+                            if api_version >= parse_version("4.0"):
+                                for step in item_prot['preprocessing']['step']:
+                                    if 'error_handler' not in step: step['error_handler'] = 0
+                                    if 'error_handler_params' not in step: step['error_handler_params'] = ""
+                            item_prot['preprocessing'] = item_prot['preprocessing']['step']
+
+                        if 'applications' in item_prot:
+                            if isinstance(item_prot['applications']['application'], dict): item_prot['applications']['application'] = [item_prot['applications']['application']]
+                            item_prot['applications'] = [app2id[app['name']] for app in item_prot['applications']['application']] # resolve applications
+                        new_item_prot = zabbix.itemprototype.create(item_prot)
+
                 if 'trigger_prototypes' in rule:
                     del rule['trigger_prototypes'] # FIXME: add trigger prototypes
+
                 if 'graph_prototypes' in rule:
                     del rule['graph_prototypes'] # FIXME: add graph prototypes
-
-                new_rule = zabbix.discoveryrule.create(rule)
 
         # TBD/TODO/FIXME:
         # - graphs
