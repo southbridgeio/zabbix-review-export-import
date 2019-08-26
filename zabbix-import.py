@@ -235,6 +235,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
         logging.debug(pformat(result))
 
         new_hostid = result['hostids'][0] # ID of created host
+        key2itemid = {}     # key: item key, value: itemid (will be used for dependent items and graph prototypes)
 
         if 'applications' not in host:
             host['applications'] = {'application': []}
@@ -296,7 +297,6 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 })
 
             # fetch itemids for master items:
-            key2itemid = {}     # key: item key, value: itemid
             if list(filter(lambda x: x['type'] == 18,host['items']['item'])): # only fetch itemids if there is dependent items
                 for item in zabbix.item.get(output=["key_", "itemid"], hostids=new_hostid):
                     key2itemid[item['key_']] = item['itemid']
@@ -454,7 +454,19 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
 
 
                 if 'graph_prototypes' in rule:
-                    del rule['graph_prototypes'] # FIXME: add graph prototypes
+                    for item_prot in zabbix.itemprototype.get(output=["key_", "itemid"], hostids=new_hostid):
+                        key2itemid[item_prot['key_']] = item_prot['itemid']
+
+                    if isinstance(rule['graph_prototypes']['graph_prototype'], dict): rule['graph_prototypes']['graph_prototype'] = [rule['graph_prototypes']['graph_prototype']]
+                    for graph_prot in rule['graph_prototypes']['graph_prototype']:
+                        if isinstance(graph_prot['graph_items']['graph_item'], dict): graph_prot['graph_items']['graph_item'] = [graph_prot['graph_items']['graph_item']]
+                        for gitem in graph_prot['graph_items']['graph_item']:
+                            if 'item' in gitem:
+                                gitem['itemid'] = key2itemid[gitem['item']['key']]
+                                del gitem['item']
+                        graph_prot['gitems'] = graph_prot['graph_items']['graph_item']
+                        del graph_prot['graph_items']['graph_item']
+                        new_graph_prot = zabbix.graphprototype.create(graph_prot)
 
         # TBD/TODO/FIXME:
         # - graphs
