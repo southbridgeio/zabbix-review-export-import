@@ -297,9 +297,8 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 })
 
             # fetch itemids for master items:
-            if list(filter(lambda x: x['type'] == 18,host['items']['item'])): # only fetch itemids if there is dependent items
-                for item in zabbix.item.get(output=["key_", "itemid"], hostids=new_hostid):
-                    key2itemid[item['key_']] = item['itemid']
+            for item in zabbix.item.get(output=["key_", "itemid"], hostids=new_hostid):
+                key2itemid[item['key_']] = item['itemid']
 
             # create dependent items:
             for item in filter(lambda x: x['type'] == 18,host['items']['item']):
@@ -469,8 +468,19 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                         del graph_prot['graph_items']['graph_item']
                         new_graph_prot = zabbix.graphprototype.create(graph_prot)
 
-        # TBD/TODO/FIXME:
-        # - graphs
+        if 'graphs' in yml:
+            if isinstance(yml['graphs']['graph'], dict): yml['graphs']['graph'] = [yml['graphs']['graph']]
+            for graph in yml['graphs']['graph']:
+                if isinstance(graph['graph_items']['graph_item'], dict): graph['graph_items']['graph_item'] = [graph['graph_items']['graph_item']]
+                for gitem in graph['graph_items']['graph_item']:
+                    if 'item' in gitem:
+                        gitem['itemid'] = key2itemid[gitem['item']['key']]
+                        del gitem['item']
+                        gitem['color'] = str(gitem['color']).zfill(6)
+                graph['gitems'] = graph['graph_items']['graph_item']
+                del graph['graph_items']['graph_item']
+                new_graph = zabbix.graph.create(graph)
+
     except ZabbixAPIException as e:
         if 'already exists' in str(e):
             result = True
