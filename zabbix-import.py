@@ -248,9 +248,11 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 new_app = zabbix.application.create(name=app['name'], hostid=new_hostid) # create missed apps
                 app2id[app['name']] = new_app['applicationids'][0] # save new app id for future use in items
 
-        if 'items' in host:
+        if 'items' in host or 'discovery_rules' in host:
             # hack: use default interface for items
             iface = zabbix.hostinterface.get(output="interfaceid", hostids=new_hostid, filter={"main": 1})
+
+        if 'items' in host:
             if isinstance(host['items']['item'], dict): host['items']['item'] = [host['items']['item']]
 
             # create non-dependent items:
@@ -394,8 +396,31 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     trigger['dependencies'] = [{"triggerid": trigger2triggerid[(x['name'],host['name'])]} for x in trigger['dependencies']['dependency']]
                 new_trigger = zabbix.trigger.create(trigger)
 
+        if 'discovery_rules' in host:
+            if isinstance(host['discovery_rules']['discovery_rule'], dict): host['discovery_rules']['discovery_rule'] = [host['discovery_rules']['discovery_rule']]
+            for rule in host['discovery_rules']['discovery_rule']:
+                rule['delay'] = str(rule['delay']) # convert to string
+                rule['hostid'] = new_hostid
+                rule['interfaceid'] = iface[0]['interfaceid']
+                rule['key_'] = rule['key']
+                del rule['key']
+                if 'filter' in rule:
+                    if 'conditions' not in rule['filter']: del rule['filter']
+
+                if 'filter' in rule:
+                    if isinstance(rule['filter']['conditions']['condition'], dict): rule['filter']['conditions']['condition'] = [rule['filter']['conditions']['condition']]
+                    rule['filter']['conditions'] = rule['filter']['conditions']['condition']
+
+                if 'item_prototypes' in rule:
+                    del rule['item_prototypes']  # FIXME: add item prototypes
+                if 'trigger_prototypes' in rule:
+                    del rule['trigger_prototypes'] # FIXME: add trigger prototypes
+                if 'graph_prototypes' in rule:
+                    del rule['graph_prototypes'] # FIXME: add graph prototypes
+
+                new_rule = zabbix.discoveryrule.create(rule)
+
         # TBD/TODO/FIXME:
-        # - discovery_rules
         # - graphs
     except ZabbixAPIException as e:
         if 'already exists' in str(e):
