@@ -711,10 +711,8 @@ def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroup
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache):
+def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
-    api_version = parse_version(zabbix_.apiinfo.version())
-    logging.debug('Destination Zabbix server version: {}'.format(api_version))
 
     with open(yaml_file, 'r') as f:
         yml = yaml.safe_load(f)
@@ -826,6 +824,9 @@ if __name__ == "__main__":
     result = True               # Total success indicator
 
     try:
+        api_version = parse_version(zabbix_.apiinfo.version())
+        logging.debug('Destination Zabbix server version: {}'.format(api_version))
+
         # Fill caches:
         group2groupid = {}
         template2templateid = {}
@@ -866,6 +867,7 @@ if __name__ == "__main__":
                 zabbix_=zabbix_,
                 yaml_file=f,
                 file_type=args.type,
+                api_version=api_version,
                 group_cache=group2groupid,
                 template_cache=template2templateid,
                 proxy_cache=proxy2proxyid,
