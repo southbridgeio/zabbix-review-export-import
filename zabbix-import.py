@@ -352,7 +352,9 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                         if isinstance(step['headers']['header'], dict): step['headers']['header'] = [step['headers']['header']]
                         step['headers'] = step['headers']['header']
                     step['name'] = str(step['name'])     # convert to string
-                    if 'no' not in step: step['no'] = no # step counter
+                    if 'no' not in step:
+                        step['no'] = no # step counter
+                        no += 1
                     if 'status_codes' in step: step['status_codes'] = str(step['status_codes']) # convert to string
                     if 'required' in step: step['required'] = str(step['required'])
                     if 'query_fields' in step:
