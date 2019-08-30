@@ -226,10 +226,6 @@ def main(zabbix_, save_yaml, directory):
     global_macroses = zabbix_.usermacro.get(globalmacro='true')
     dumps_json(object='globalmacro', data=global_macroses, key='macro', save_yaml=save_yaml, directory=directory, drop_keys=["globalmacroid"])
 
-    logging.info("Processing user macroses...")
-    user_macroses = zabbix_.usermacro.get()
-    dumps_json(object='usermacro', data=user_macroses, key=('macro', 'hostid'), save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
-
     logging.info("Processing services...")
     services = zabbix_.service.get(selectParent=['name'], selectTimes='extend')
     dumps_json(object='services', data=services, key=('name', 'serviceid'), save_yaml=save_yaml, directory=directory, drop_keys=["status"])
@@ -309,6 +305,15 @@ def main(zabbix_, save_yaml, directory):
                 condition['value'] = triggerid2trigger[condition['value']]['description']
 
     dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
+
+    logging.info("Processing user macroses...")
+    user_macroses = zabbix_.usermacro.get()
+    # resolve hostids:
+    for umacro in user_macroses:
+        try: umacro['hostid'] = hostid2host[umacro['hostid']]
+        except KeyError:
+            umacro['hostid'] = templateid2template[umacro['hostid']]
+    dumps_json(object='usermacro', data=user_macroses, key=('hostid', 'macro'), save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
 
 def environ_or_required(key):
     "Argparse environment vars helper"
