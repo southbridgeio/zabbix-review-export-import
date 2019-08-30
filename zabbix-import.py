@@ -47,24 +47,27 @@ def get_zabbix_connection(zbx_url, zbx_user, zbx_password):
 
 def guess_yaml_type(yml, xml_exported=False):
     "Return string of guessed YAML file type (group, host, ...)"
-    if xml_exported:
-        if 'groups' in yml and not 'templates' in yml and not 'hosts' in yml: return 'group'
-        if 'templates' in yml: return 'template'
-        if 'maps' in yml: return 'map'
-        if 'screens' in yml: return 'screen'
-        if 'hosts' in yml: return 'host'
-        if 'value_maps' in yml: return 'valuemap'
-    else:
-        if yml.keys() >= {"algorithm", "goodsla"}: return 'service'
-        if yml.keys() >= {"proxy_hostid"}: return 'proxy'
-        if yml.keys() >= {"maintenance_type"}: return 'maintenance'
-        if yml.keys() >= {"alias"}: return 'user'
-        if yml.keys() >= {"exec_path"}: return 'mediatype'
-        if yml.keys() >= {"users_status"}: return 'usergroup'
-        if yml.keys() >= {"operations"}: return 'action'
-        if yml.keys() >= {"hostid", "macro"}: return 'usermacro'
-        if yml.keys() >= {"macro"}: return 'globalmacro'
-        if yml.keys() >= {"imagetype"}: return 'image'
+    try:
+        if xml_exported:
+            if 'groups' in yml and not 'templates' in yml and not 'hosts' in yml: return 'group'
+            if 'templates' in yml: return 'template'
+            if 'maps' in yml: return 'map'
+            if 'screens' in yml: return 'screen'
+            if 'hosts' in yml: return 'host'
+            if 'value_maps' in yml: return 'valuemap'
+        else:
+            if yml.keys() >= {"algorithm", "goodsla"}: return 'service'
+            if yml.keys() >= {"proxy_hostid"}: return 'proxy'
+            if yml.keys() >= {"maintenance_type"}: return 'maintenance'
+            if yml.keys() >= {"alias"}: return 'user'
+            if yml.keys() >= {"exec_path"}: return 'mediatype'
+            if yml.keys() >= {"users_status"}: return 'usergroup'
+            if yml.keys() >= {"operations"}: return 'action'
+            if yml.keys() >= {"hostid", "macro"}: return 'usermacro'
+            if yml.keys() >= {"macro"}: return 'globalmacro'
+            if yml.keys() >= {"imagetype"}: return 'image'
+    except Exception as e:
+        logging.error(e)
 
     return 'autoguess'
 
@@ -714,8 +717,17 @@ def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroup
 def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
 
-    with open(yaml_file, 'r') as f:
-        yml = yaml.safe_load(f)
+    try:
+        with open(yaml_file, 'r') as f:
+            yml = yaml.safe_load(f)
+    except Exception as e:
+        logging.error("Cant load YAML file: {}".format(e))
+        return None
+
+    if not yml:
+        logging.error("Got empty YAML document, skipping...")
+        return None
+
     logging.debug('Got following YAML: {}'.format(yml))
 
     xml_exported = False
@@ -731,10 +743,9 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
         logging.debug('Loading from JSON-exported/raw YAML')
 
     if file_type == 'autoguess':
-        if xml_exported: file_type = guess_yaml_type(yml, xml_exported=xml_exported)
-        else: file_type = guess_yaml_type(yml, xml_exported=xml_exported)
+        file_type = guess_yaml_type(yml, xml_exported=xml_exported)
         if file_type == 'autoguess':
-            logging.error("Cant guess object type, exiting...")
+            logging.error("Cant guess object type, skipping...")
             return None
         logging.info('Guessed file type: {}'.format(file_type))
 
@@ -757,7 +768,7 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
         elif file_type == 'action':
             op_result = import_action(api_version, zabbix_, yml, action_cache, template_cache, group_cache, mediatype_cache, usergroup_cache, users_cache, host_cache, trigger_cache)
         else:
-            logging.error("This file type not yet implemented, exiting...")
+            logging.error("This file type not yet implemented, skipping...")
     except Exception as e:
         logging.exception(pformat(e))
     if op_result == True:
