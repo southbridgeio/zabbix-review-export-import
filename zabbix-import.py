@@ -150,7 +150,8 @@ def get_trigger_cache(zabbix):
     result = zabbix.trigger.get(output=['description', 'triggerid'], selectHosts=['name'])
     trigger2triggerid = {}        # key: (trigger description, host name), value: triggerid
     for t in result:
-        trigger2triggerid[(t['description'],t['hosts'][0]['name'])] = int(t['triggerid'])
+        for h in t['hosts']:
+            trigger2triggerid[(t['description'],h['name'])] = int(t['triggerid'])
     return trigger2triggerid
 
 def import_group(zabbix, yml, group2groupid):
