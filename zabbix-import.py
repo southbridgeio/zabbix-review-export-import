@@ -399,7 +399,10 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 if 'dependencies' in trigger: # resolve dependencies
                     if isinstance(trigger['dependencies']['dependency'], dict): trigger['dependencies']['dependency'] = [trigger['dependencies']['dependency']]
                     trigger['dependencies'] = [{"triggerid": trigger2triggerid[(x['name'],host['name'])]} for x in trigger['dependencies']['dependency']]
-                new_trigger = zabbix.trigger.create(trigger)
+                try:
+                    new_trigger = zabbix.trigger.create(trigger)
+                except ZabbixAPIException as e:
+                    logging.error(e)
 
         if 'discovery_rules' in host:
             if isinstance(host['discovery_rules']['discovery_rule'], dict): host['discovery_rules']['discovery_rule'] = [host['discovery_rules']['discovery_rule']]
