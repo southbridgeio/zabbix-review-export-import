@@ -154,6 +154,22 @@ def get_trigger_cache(zabbix):
             trigger2triggerid[(t['description'],h['name'])] = int(t['triggerid'])
     return trigger2triggerid
 
+def get_usermacro_cache(zabbix):
+    "Return dict (hostid, usermacro name)=>{hostmacroid, value} or None on error"
+    result = zabbix.usermacro.get()
+    usermacro2hostmacroid = {}  # key: (hostid, usermacro name), value: {hostmacroid, value}
+    for um in result:
+        usermacro2hostmacroid[(um['hostid'], um['macro'])] = {'hostmacroid': um['hostmacroid'], 'value': um['value']}
+    return usermacro2hostmacroid
+
+def get_globalmacro_cache(zabbix):
+    "Return dict globalmacro name=>{globalmacroid, value} or None on error"
+    result = zabbix.usermacro.get(globalmacro='true')
+    globalmacro2globalmacroid = {} # key: globalmacro name, value: {globalmacroid, value}
+    for gm in result:
+        globalmacro2globalmacroid[gm['macro']] = {'globalmacroid': gm['globalmacroid'], 'value': gm['value']}
+    return globalmacro2globalmacroid
+
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     g = yml['groups']['group']
@@ -205,7 +221,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
         else:
             linked_templates = ""
 
-        # set macroses for new template:
+        # set macroses for new host:
         if 'macros' in host:
             if isinstance(host['macros']['macro'], dict): host['macros']['macro'] = [host['macros']['macro']]
             macroses = [{"macro": macro['macro'], "value": macro['value'] } for macro in host['macros']['macro']]
@@ -552,6 +568,7 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
         if 'already exist' in str(e):
             result = True
         else:
+            result = None
             logging.exception(e)
     return result
 
@@ -586,6 +603,7 @@ def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
         if 'already exist' in str(e):
             result = True
         else:
+            result = None
             logging.exception(e)
     return result
 
@@ -629,6 +647,7 @@ def import_action(api_version, zabbix, yml, action2actionid, template2templateid
         if 'already exist' in str(e):
             result = True
         else:
+            result = None
             logging.exception(e)
     return result
 
@@ -676,6 +695,7 @@ def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2media
         if 'already exist' in str(e):
             result = True
         else:
+            result = None
             logging.exception(e)
     return result
 
@@ -715,10 +735,32 @@ def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroup
         if 'already exist' in str(e):
             result = True
         else:
+            result = None
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache):
+def import_usermacro(zabbix, yml, usermacro2hostmacroid, host2hostid):
+    "Import user macro from YAML. Return created object, None on error, True if object already exists"
+
+    result = None
+    try:
+        t = (str(host2hostid[yml['hostid']]),yml['macro'])
+        logging.debug("t={}".format(t))
+        if t in usermacro2hostmacroid:
+            if usermacro2hostmacroid[t]['value'] == yml['value']: return True # skip already existing objects
+            else:                   # update existing hostmacro
+                result = zabbix.usermacro.update(hostmacroid=usermacro2hostmacroid[t]['hostmacroid'], value=yml['value'])
+        else:                       # create new hostmacro
+            result = zabbix.usermacro.create(hostid=host2hostid[yml['hostid']], macro=yml['macro'], value=yml['value'])
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            result = None
+            logging.exception(e)
+    return result
+
+def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache, usermacro_cache, globalmacro_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
 
     try:
@@ -771,6 +813,10 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
         #     op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
         elif file_type == 'action':
             op_result = import_action(api_version, zabbix_, yml, action_cache, template_cache, group_cache, mediatype_cache, usergroup_cache, users_cache, host_cache, trigger_cache)
+        elif file_type == 'usermacro':
+            op_result = import_usermacro(zabbix_, yml, usermacro_cache, host_cache)
+        elif file_type == 'globalmacro':
+            op_result = import_globalmacro(zabbix_, yml, globalmacro_cache)
         else:
             logging.error("This file type not yet implemented, skipping...")
     except Exception as e:
@@ -853,6 +899,8 @@ if __name__ == "__main__":
         screen2screenid = {}
         action2actionid = {}
         trigger2triggerid = {}
+        usermacro2hostmacroid = {}
+        globalmacro2globalmacroid = {}
 
         # load only needed caches:
         if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action'):
@@ -861,7 +909,7 @@ if __name__ == "__main__":
             template2templateid = get_template_cache(zabbix_)
         if args.type in ('autoguess', 'proxy', 'host'):
             proxy2proxyid = get_proxy_cache(zabbix_)
-        if args.type in ('autoguess', 'host', 'action'):
+        if args.type in ('autoguess', 'host', 'action', 'usermacro'):
             host2hostid = get_hosts_cache(zabbix_)
         if args.type in ('autoguess', 'usergroup', 'action', 'user', 'screen'):
             usergroup2usergroupid = get_usergroup_cache(zabbix_)
@@ -875,6 +923,10 @@ if __name__ == "__main__":
             action2actionid = get_action_cache(zabbix_)
         if args.type in ('autoguess', 'action'):
             trigger2triggerid = get_trigger_cache(zabbix_)
+        if args.type in ('autoguess', 'usermacro'):
+            usermacro2hostmacroid = get_usermacro_cache(zabbix_)
+        if args.type in ('autoguess', 'globalmacro'):
+            globalmacro2globalmacroid = get_globalmacro_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
@@ -893,6 +945,8 @@ if __name__ == "__main__":
                 screen_cache=screen2screenid,
                 action_cache=action2actionid,
                 trigger_cache=trigger2triggerid,
+                usermacro_cache=usermacro2hostmacroid,
+                globalmacro_cache=globalmacro2globalmacroid,
             )
             if not r: result = False
     except Exception as e:
