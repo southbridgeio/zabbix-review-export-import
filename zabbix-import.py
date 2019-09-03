@@ -527,7 +527,7 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
         else:
             groups = []
             for group in new_template['groups']['group']:
-                groups.append({'groupid': group2groupid[new_template['groups']['group'][group]['name']]})
+                groups.append({'groupid': group2groupid[group['name']]})
 
         # set templateid(s) for linked template(s):
         if 'templates' in new_template:
