@@ -258,6 +258,50 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
             iface = zabbix.hostinterface.get(output="interfaceid", hostids=new_hostid, filter={"main": 1})
             new_ifaceid = iface[0]['interfaceid']
 
+        if 'httptests' in host: # we MUST create webchecks BEFORE items to get full item cache (key2itemid)
+            if isinstance(host['httptests']['httptest'], dict): host['httptests']['httptest'] = [host['httptests']['httptest']]
+            for test in host['httptests']['httptest']:
+                if isinstance(test['steps']['step'], dict): test['steps']['step'] = [test['steps']['step']]
+                if 'headers' in test:
+                    if isinstance(test['headers']['header'], dict): test['headers']['header'] = [test['headers']['header']]
+                no = 0
+                for step in test['steps']['step']:
+                    if 'headers' in step:
+                        if isinstance(step['headers']['header'], dict): step['headers']['header'] = [step['headers']['header']]
+                        step['headers'] = step['headers']['header']
+                    step['name'] = str(step['name'])     # convert to string
+                    if 'no' not in step:
+                        step['no'] = no # step counter
+                        no += 1
+                    if 'status_codes' in step: step['status_codes'] = str(step['status_codes']) # convert to string
+                    if 'required' in step: step['required'] = str(step['required'])
+                    if 'query_fields' in step:
+                        if isinstance(step['query_fields']['query_field'], dict): step['query_fields']['query_field'] = [step['query_fields']['query_field']]
+                        step['query_fields'] = step['query_fields']['query_field']
+                        for field in step['query_fields']:
+                            if 'value' not in field: field['value'] = "" # add missing "value" field
+                            field["value"] = str(field["value"]) # convert to string
+
+                new_httptest = zabbix.httptest.create({
+                    "name": test['name'],
+                    "hostid": new_hostid,
+                    "delay": test['delay'] if 'delay' in test else "1m",
+                    "headers": test['headers']['header'] if 'headers' in test else [],
+                    "retries": test['attempts'],
+                    "steps": test['steps']['step'],
+                    "agent": test['agent'] if 'agent' in test else "Zabbix",
+                    "status": test['status'] if 'status' in test else 0,
+                    "authentication": test['authentication'] if 'authentication' in test else 0,
+                    "http_password": test['http_password'] if 'http_password' in test else "",
+                    "http_proxy": test['http_proxy'] if 'http_proxy' in test else "",
+                    "http_user": test['http_user'] if 'http_user' in test else "",
+                    "ssl_cert_file": test['ssl_cert_file'] if 'ssl_cert_file' in test else "",
+                    "ssl_key_file": test['ssl_key_file'] if 'ssl_key_file' in test else "",
+                    "ssl_key_password": test['ssl_key_password'] if 'ssl_key_password' in test else "",
+                    "verify_host": test['verify_host'] if 'verify_host' in test else 0,
+                    "verify_peer": test['verify_peer'] if 'verify_peer' in test else 0,
+                })
+
         if 'items' in host:
             if isinstance(host['items']['item'], dict): host['items']['item'] = [host['items']['item']]
 
@@ -301,7 +345,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                 })
 
             # fetch itemids for master items:
-            for item in zabbix.item.get(output=["key_", "itemid"], hostids=new_hostid):
+            for item in zabbix.item.get(output=["key_", "itemid"], hostids=new_hostid, webitems=True):
                 key2itemid[item['key_']] = item['itemid']
 
             # create dependent items:
@@ -342,50 +386,6 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
                     "snmp_oid": item['snmp_oid'] if 'snmp_oid' in item else "",
                     "applications": [app2id[x['name']] for x in item['applications']['application']],
                     "preprocessing": item['preprocessing']['step'] if 'preprocessing' in item else [],
-                })
-
-        if 'httptests' in host:
-            if isinstance(host['httptests']['httptest'], dict): host['httptests']['httptest'] = [host['httptests']['httptest']]
-            for test in host['httptests']['httptest']:
-                if isinstance(test['steps']['step'], dict): test['steps']['step'] = [test['steps']['step']]
-                if 'headers' in test:
-                    if isinstance(test['headers']['header'], dict): test['headers']['header'] = [test['headers']['header']]
-                no = 0
-                for step in test['steps']['step']:
-                    if 'headers' in step:
-                        if isinstance(step['headers']['header'], dict): step['headers']['header'] = [step['headers']['header']]
-                        step['headers'] = step['headers']['header']
-                    step['name'] = str(step['name'])     # convert to string
-                    if 'no' not in step:
-                        step['no'] = no # step counter
-                        no += 1
-                    if 'status_codes' in step: step['status_codes'] = str(step['status_codes']) # convert to string
-                    if 'required' in step: step['required'] = str(step['required'])
-                    if 'query_fields' in step:
-                        if isinstance(step['query_fields']['query_field'], dict): step['query_fields']['query_field'] = [step['query_fields']['query_field']]
-                        step['query_fields'] = step['query_fields']['query_field']
-                        for field in step['query_fields']:
-                            if 'value' not in field: field['value'] = "" # add missing "value" field
-                            field["value"] = str(field["value"]) # convert to string
-
-                new_httptest = zabbix.httptest.create({
-                    "name": test['name'],
-                    "hostid": new_hostid,
-                    "delay": test['delay'] if 'delay' in test else "1m",
-                    "headers": test['headers']['header'] if 'headers' in test else [],
-                    "retries": test['attempts'],
-                    "steps": test['steps']['step'],
-                    "agent": test['agent'] if 'agent' in test else "Zabbix",
-                    "status": test['status'] if 'status' in test else 0,
-                    "authentication": test['authentication'] if 'authentication' in test else 0,
-                    "http_password": test['http_password'] if 'http_password' in test else "",
-                    "http_proxy": test['http_proxy'] if 'http_proxy' in test else "",
-                    "http_user": test['http_user'] if 'http_user' in test else "",
-                    "ssl_cert_file": test['ssl_cert_file'] if 'ssl_cert_file' in test else "",
-                    "ssl_key_file": test['ssl_key_file'] if 'ssl_key_file' in test else "",
-                    "ssl_key_password": test['ssl_key_password'] if 'ssl_key_password' in test else "",
-                    "verify_host": test['verify_host'] if 'verify_host' in test else 0,
-                    "verify_peer": test['verify_peer'] if 'verify_peer' in test else 0,
                 })
 
         if 'triggers' in yml:
