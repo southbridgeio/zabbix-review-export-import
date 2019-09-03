@@ -739,15 +739,17 @@ def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroup
             logging.exception(e)
     return result
 
-def import_usermacro(zabbix, yml, usermacro2hostmacroid, host2hostid):
+def import_usermacro(zabbix, yml, usermacro2hostmacroid, host2hostid, template2templateid):
     "Import user macro from YAML. Return created object, None on error, True if object already exists"
 
     result = None
     try:
-        t = (str(host2hostid[yml['hostid']]),yml['macro'])
-        logging.debug("t={}".format(t))
+        try:
+            t = (str(host2hostid[yml['hostid']]),yml['macro']) # host?
+        except KeyError:
+            t = (str(template2templateid[yml['hostid']]),yml['macro']) # template?
         if t in usermacro2hostmacroid:
-            if usermacro2hostmacroid[t]['value'] == yml['value']: return True # skip already existing objects
+            if usermacro2hostmacroid[t]['value'] == str(yml['value']): return True # skip already existing objects
             else:                   # update existing hostmacro
                 result = zabbix.usermacro.update(hostmacroid=usermacro2hostmacroid[t]['hostmacroid'], value=yml['value'])
         else:                       # create new hostmacro
@@ -814,7 +816,7 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
         elif file_type == 'action':
             op_result = import_action(api_version, zabbix_, yml, action_cache, template_cache, group_cache, mediatype_cache, usergroup_cache, users_cache, host_cache, trigger_cache)
         elif file_type == 'usermacro':
-            op_result = import_usermacro(zabbix_, yml, usermacro_cache, host_cache)
+            op_result = import_usermacro(zabbix_, yml, usermacro_cache, host_cache, template_cache)
         elif file_type == 'globalmacro':
             op_result = import_globalmacro(zabbix_, yml, globalmacro_cache)
         else:
@@ -905,7 +907,7 @@ if __name__ == "__main__":
         # load only needed caches:
         if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action'):
             group2groupid = get_hostgroups_cache(zabbix_)
-        if args.type in ('autoguess', 'host', 'template', 'action'):
+        if args.type in ('autoguess', 'host', 'template', 'action', 'usermacro'):
             template2templateid = get_template_cache(zabbix_)
         if args.type in ('autoguess', 'proxy', 'host'):
             proxy2proxyid = get_proxy_cache(zabbix_)
