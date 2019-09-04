@@ -74,7 +74,7 @@ def dumps_json(object, data, directory, key='name', save_yaml=False,drop_keys=[]
     """
     Create JSON or yaml file in folder
     """
-    subfolder = os.path.join(directory, object)
+    subfolder = os.path.join(directory, object.lower())
     if not os.path.exists(subfolder):
         os.makedirs(subfolder)
 
@@ -124,7 +124,7 @@ def dump_xml(object, txt, name, directory, save_yaml=False):
     """
     Create XML or YAML in folder
     """
-    folder = os.path.join(directory, object)
+    folder = os.path.join(directory, object.lower())
     if not os.path.exists(folder):
         os.makedirs(folder)
 
