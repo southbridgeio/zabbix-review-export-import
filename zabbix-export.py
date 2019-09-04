@@ -177,7 +177,7 @@ def main(zabbix_, save_yaml, directory):
     export(zabbix_.hostgroup, 'groups', 'groupid', 'name')
     export(zabbix_.host, 'hosts', 'hostid', 'name')
     export(zabbix_.template, 'templates', 'templateid', 'name')
-    export(zabbix_.valuemap, 'valuemaps', 'valuemapid', 'name')
+    export(zabbix_.valuemap, 'valueMaps', 'valuemapid', 'name')
     export(zabbix_.map, 'maps', 'sysmapid', 'name')
 
     # JSON
