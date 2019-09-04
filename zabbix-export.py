@@ -313,7 +313,7 @@ def main(zabbix_, save_yaml, directory):
         try: umacro['hostid'] = hostid2host[umacro['hostid']]
         except KeyError:
             umacro['hostid'] = templateid2template[umacro['hostid']]
-    dumps_json(object='usermacro', data=user_macroses, key=('hostid', 'macro'), save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
+    dumps_json(object='usermacro', data=user_macroses, key=('macro', 'hostid'), save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
 
 def environ_or_required(key):
     "Argparse environment vars helper"
