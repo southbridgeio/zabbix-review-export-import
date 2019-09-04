@@ -751,9 +751,29 @@ def import_usermacro(zabbix, yml, usermacro2hostmacroid, host2hostid, template2t
         if t in usermacro2hostmacroid:
             if usermacro2hostmacroid[t]['value'] == str(yml['value']): return True # skip already existing objects
             else:                   # update existing hostmacro
-                result = zabbix.usermacro.update(hostmacroid=usermacro2hostmacroid[t]['hostmacroid'], value=yml['value'])
+                result = zabbix.usermacro.update(hostmacroid=usermacro2hostmacroid[t]['hostmacroid'], value=str(yml['value']))
         else:                       # create new hostmacro
-            result = zabbix.usermacro.create(hostid=host2hostid[yml['hostid']], macro=yml['macro'], value=yml['value'])
+            result = zabbix.usermacro.create(hostid=host2hostid[yml['hostid']], macro=yml['macro'], value=str(yml['value']))
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            result = None
+            logging.exception(e)
+    return result
+
+def import_globalmacro(zabbix, yml, globalmacro2globalmacroid):
+    "Import global macro from YAML. Return created object, None on error, True if object already exists"
+
+    result = None
+    try:
+        if yml['macro'] in globalmacro2globalmacroid:
+            if globalmacro2globalmacroid[yml['macro']]['value'] == str(yml['value']):
+                return True                                    # skip already existing objects
+            else:                                              # update globalmacro value
+                result = zabbix.usermacro.updateglobal(globalmacroid=globalmacro2globalmacroid[yml['macro']]['globalmacroid'], value=str(yml['value']))
+        else:                   # create new globalmacro
+            result = zabbix.usermacro.createglobal(macro=yml['macro'], value=str(yml['value']))
     except ZabbixAPIException as e:
         if 'already exist' in str(e):
             result = True
