@@ -3,7 +3,9 @@ With Zabbix review and export (backup)/import you can create review mechanism an
 
 You can export (backup) all hosts templates and other object with `zabbix-export.py` script.
 
-You can also import (restore) many types of zabbix objects from YAML dump with `zabbix-import.py` script (note that order of import is **matters**, i.e., you cant add user if there is no mediatype for them, etc...). Already existed objects will be skipped.
+You can also import (restore) many types of zabbix objects from YAML dump with `zabbix-import.py` script (note that order of import is
+**matters**, i.e., you cant add user if there is no mediatype for them, etc...). Already existed objects will be skipped. Object type is
+autodetected, but may be pointed manually (it is much faster for single-file import operations)/
 
 - [Requirements](#requirements)
 - [Make export and backup](#make-export-and-backup)
