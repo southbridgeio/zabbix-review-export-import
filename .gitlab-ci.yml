@@ -1,9 +1,18 @@
 variables:
 #  CI_DEBUG_TRACE: "true"
   GITLAB_TOKEN: $GITLAB_TOKEN # https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html
-  GITLAB_FQDN: gitlab.southbridge.ru # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
+  GITLAB_FQDN: $GITLAB_FQDN # You instanse FQDN, e.g. https://gitlab.com or https://gitlab.example.com
   ZABBIX_USERNAME: $ZBX_USER # Zabbix user with admin privilege
   ZABBIX_PASSWORD: $ZBX_PASSWORD
+  GITLAB_GROUP: $GITLAB_GROUP
+  OLD_ZABBIX_URL: $OLD_ZABBIX_URL
+  NEW_ZABBIX_URL: $NEW_ZABBIX_URL
+  NEW_YAML_REPO: $NEW_YAML_REPO
+  NEW_XML_REPO: $NEW_XML_REPO
+  OLD_YAML_REPO: $OLD_YAML_REPO
+  OLD_XML_REPO: $OLD_XML_REPO
+  USER_EMAIL: $USER_EMAIL
+  USER_NAME: $USER_NAME
 
 before_script:
   - date
@@ -17,8 +26,8 @@ after_script:
     - dind
   image: python:3
   script:
-    - git config --global user.email "e.tereshkov@southbridge.ru"
-    - git config --global user.name "Zabbix Auto Backup"
+    - git config --global user.email "$USER_EMAIL"
+    - git config --global user.name "$USER_NAME"
     - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GITLAB_GROUP/$GITLAB_REPO.git
     - cd $GITLAB_REPO
     - git checkout -b develop origin/develop || git checkout develop
@@ -44,66 +53,58 @@ after_script:
 # You job for review and backup
 #
 # Example for you instance
-YAML zabbix4.2:
+YAML new zabbix:
  variables:
-   GITLAB_REPO: zabbix42-yaml
-   GITLAB_GROUP: e.tereshkov
-   ZABBIX_URL: https://zabbix42.southbridge.io
+   GITLAB_REPO: $NEW_YAML_REPO
+   ZABBIX_URL: $NEW_ZABBIX_URL
    SAVE_YAML: --save-yaml
  <<: *review-manual
 
-YAML SCHEDULE zabbix4.2:
+YAML SCHEDULE new zabbix:
  variables:
-   GITLAB_REPO: zabbix42-yaml
-   GITLAB_GROUP: e.tereshkov
-   ZABBIX_URL: https://zabbix42.southbridge.io
+   GITLAB_REPO: $NEW_YAML_REPO
+   ZABBIX_URL: $NEW_ZABBIX_URL
    SAVE_YAML: --save-yaml
  <<: *review-schedules
 
-XML zabbix4.2:
+XML new zabbix:
  variables:
-   GITLAB_REPO: zabbix42-xml
-   GITLAB_GROUP: e.tereshkov
-   ZABBIX_URL: https://zabbix42.southbridge.io
+   GITLAB_REPO: $NEW_XML_REPO
+   ZABBIX_URL: $NEW_ZABBIX_URL
    SAVE_YAML: ""
  <<: *review-manual
 
-XML SCHEDULE zabbix4.2:
+XML SCHEDULE new zabbix:
  variables:
-   GITLAB_REPO: zabbix42-xml
-   GITLAB_GROUP: e.tereshkov
-   ZABBIX_URL: https://zabbix42.southbridge.io
+   GITLAB_REPO: $NEW_XML_REPO
+   ZABBIX_URL: $NEW_ZABBIX_URL
    SAVE_YAML: ""
  <<: *review-schedules
 
-YAML zabbix3.4:
+YAML old zabbix:
  variables:
-   GITLAB_REPO: zabbix34-yaml
-   GITLAB_GROUP: e.tereshkov
-   ZABBIX_URL: https://zabbix.southbridge.io
+   GITLAB_REPO: $OLD_YAML_REPO
+   ZABBIX_URL: $OLD_ZABBIX_URL
    SAVE_YAML: --save-yaml
  <<: *review-manual
 
-YAML SCHEDULE zabbix3.4:
+YAML SCHEDULE old zabbix:
  variables:
-   GITLAB_REPO: zabbix34-yaml
-   GITLAB_GROUP: e.tereshkov
-   ZABBIX_URL: https://zabbix.southbridge.io
+   GITLAB_REPO: $OLD_YAML_REPO
+   ZABBIX_URL: $OLD_ZABBIX_URL
    SAVE_YAML: --save-yaml
  <<: *review-schedules
 
-XML zabbix3.4:
+XML old zabbix:
  variables:
-   GITLAB_REPO: zabbix34-xml
-   GITLAB_GROUP: e.tereshkov
-   ZABBIX_URL: https://zabbix.southbridge.io
+   GITLAB_REPO: $OLD_XML_REPO
+   ZABBIX_URL: $OLD_ZABBIX_URL
    SAVE_YAML: ""
  <<: *review-manual
 
-XML SCHEDULE zabbix3.4:
+XML SCHEDULE old zabbix:
  variables:
-   GITLAB_REPO: zabbix34-xml
-   GITLAB_GROUP: e.tereshkov
-   ZABBIX_URL: https://zabbix.southbridge.io
+   GITLAB_REPO: $OLD_XML_REPO
+   ZABBIX_URL: $OLD_ZABBIX_URL
    SAVE_YAML: ""
  <<: *review-schedules
