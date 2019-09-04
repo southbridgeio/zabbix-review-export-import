@@ -170,6 +170,14 @@ def get_globalmacro_cache(zabbix):
         globalmacro2globalmacroid[gm['macro']] = {'globalmacroid': gm['globalmacroid'], 'value': gm['value']}
     return globalmacro2globalmacroid
 
+def get_valuemap_cache(zabbix):
+    "Return dict valuemap name=>{valuemapid, name}"
+    result = zabbix.valuemap.get()
+    valuemap2valuemapid = {}    # key: valuemap name, value: valuemapid
+    for vm in result:
+        valuemap2valuemapid[vm['name']] = vm['valuemapid']
+    return valuemap2valuemapid
+
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     g = yml['groups']['group']
@@ -782,7 +790,31 @@ def import_globalmacro(zabbix, yml, globalmacro2globalmacroid):
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache, usermacro_cache, globalmacro_cache):
+def import_valuemap(zabbix, yml, valuemap2valuemapid):
+    "Import valuemap from YAML. Return created object, None on error, True if object already exists"
+
+    result = None
+    try:
+        if isinstance(yml['value_maps'], dict): yml['value_maps'] = [yml['value_maps']]
+        for vmap in yml['value_maps']:
+            vm = vmap['value_map']
+            if vm['name'] in valuemap2valuemapid:
+                result = True
+            else:
+                mappings = []
+                if isinstance(vm['mappings']['mapping'], dict): vm['mappings']['mapping'] = [vm['mappings']['mapping']]
+                for m in vm['mappings']['mapping']:
+                    mappings.append({'value': str(m['value']), 'newvalue': str(m['newvalue'])})
+                result = zabbix.valuemap.create(name=vm['name'],mappings=mappings)
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            result = None
+            logging.exception(e)
+    return result
+
+def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache, usermacro_cache, globalmacro_cache, valuemap_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
 
     try:
@@ -839,6 +871,8 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
             op_result = import_usermacro(zabbix_, yml, usermacro_cache, host_cache, template_cache)
         elif file_type == 'globalmacro':
             op_result = import_globalmacro(zabbix_, yml, globalmacro_cache)
+        elif file_type == 'valuemap':
+            op_result = import_valuemap(zabbix_, yml, valuemap_cache)
         else:
             logging.error("This file type not yet implemented, skipping...")
     except Exception as e:
@@ -923,6 +957,7 @@ if __name__ == "__main__":
         trigger2triggerid = {}
         usermacro2hostmacroid = {}
         globalmacro2globalmacroid = {}
+        valuemap2valuemapid = {}
 
         # load only needed caches:
         if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action'):
@@ -949,6 +984,8 @@ if __name__ == "__main__":
             usermacro2hostmacroid = get_usermacro_cache(zabbix_)
         if args.type in ('autoguess', 'globalmacro'):
             globalmacro2globalmacroid = get_globalmacro_cache(zabbix_)
+        if args.type in ('autoguess', 'valuemap'):
+            valuemap2valuemapid = get_valuemap_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
@@ -969,6 +1006,7 @@ if __name__ == "__main__":
                 trigger_cache=trigger2triggerid,
                 usermacro_cache=usermacro2hostmacroid,
                 globalmacro_cache=globalmacro2globalmacroid,
+                valuemap_cache=valuemap2valuemapid,
             )
             if not r: result = False
     except Exception as e:
