@@ -52,7 +52,6 @@ def guess_yaml_type(yml, xml_exported=False):
             if 'groups' in yml and not 'templates' in yml and not 'hosts' in yml: return 'group'
             if 'templates' in yml: return 'template'
             if 'maps' in yml: return 'map'
-            if 'screens' in yml: return 'screen'
             if 'hosts' in yml: return 'host'
             if 'value_maps' in yml: return 'valuemap'
         else:
@@ -66,6 +65,7 @@ def guess_yaml_type(yml, xml_exported=False):
             if yml.keys() >= {"hostid", "macro"}: return 'usermacro'
             if yml.keys() >= {"macro"}: return 'globalmacro'
             if yml.keys() >= {"imagetype"}: return 'image'
+            if yml.keys() >= {"hsize", "vsize"}: return 'screen'
     except Exception as e:
         logging.error(e)
 
@@ -709,34 +709,33 @@ def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2media
 
 def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroupid):
     "Import screen from YAML. Return created object, None on error, True if object already exists"
-    s = yml['screens']['screen']
-    if s['name'] in screen2screenid: return True # skip existing objects
+    if yml['name'] in screen2screenid: return True # skip existing objects
 
     result = None
     try:
         # resolve userids:
         resolved_users = []
-        for u in s['users']:
+        for u in yml['users']:
             resolved_users.append({
                 "permission": u['permission'],
                 "userid": user2userid[u['userid']],
             })
         # resolve usrgrpids:
         resolved_grps = []
-        for g in s['userGroups']:
+        for g in yml['userGroups']:
             resolved_grps.append({
                 "permission": g['permission'],
                 "usrgrpid": usergroup2usergroupid[g['usrgrpid']],
             })
 
         result = zabbix.screen.create({
-            "name": s['name'],
-            "hsize": s['hsize'],
-            "vsize": s['vsize'],
+            "name": yml['name'],
+            "hsize": yml['hsize'],
+            "vsize": yml['vsize'],
             "users": resolved_users,
-            "userGroups": resolved_grps,
-            "userid": user2userid[s['userid']],
-            "private": s['private'],
+            "userGroupyml": resolved_grps,
+            "userid": user2userid[yml['userid']],
+            "private": yml['private'],
             "screenitems": screenitems,
         })
     except ZabbixAPIException as e:
@@ -862,9 +861,8 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
             op_result = import_usergroup(zabbix_, yml, group_cache, usergroup_cache)
         elif file_type == "user":
             op_result = import_user(zabbix_, yml, usergroup_cache, users_cache, mediatype_cache)
-        # FIXME in future (too complex):
-        # elif file_type == 'screen':
-        #     op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
+        elif file_type == 'screen':
+            op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache)
         elif file_type == 'action':
             op_result = import_action(api_version, zabbix_, yml, action_cache, template_cache, group_cache, mediatype_cache, usergroup_cache, users_cache, host_cache, trigger_cache)
         elif file_type == 'usermacro':
