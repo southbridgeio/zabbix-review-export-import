@@ -1033,6 +1033,10 @@ if __name__ == "__main__":
         usermacro2hostmacroid = {}
         globalmacro2globalmacroid = {}
         valuemap2valuemapid = {}
+        graph2graphid = {}
+        item2itemid = {}
+        itemproto2itemid = {}
+        graphproto2itemid = {}
 
         # load only needed caches:
         if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action', 'screen'):
