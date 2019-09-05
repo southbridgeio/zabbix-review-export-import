@@ -66,6 +66,7 @@ def guess_yaml_type(yml, xml_exported=False):
             if yml.keys() >= {"macro"}: return 'globalmacro'
             if yml.keys() >= {"imagetype"}: return 'image'
             if yml.keys() >= {"hsize", "vsize"}: return 'screen'
+            if yml.keys() >= {"widgets"}: return "dashboard"
     except Exception as e:
         logging.error(e)
 
@@ -213,6 +214,14 @@ def get_graphproto_cache(zabbix):
         if gp['hosts']:
             graphproto2itemid['{},{}'.format(gp['hosts'][0]['name'],gp['name'])] = gp['graphid']
     return graphproto2itemid
+
+def get_dashboard_cache(zabbix):
+    "Return dict dashboardname=>dashboardid"
+    result = zabbix.dashboard.get(output=['name','dashboardid'])
+    dashboard2id = {}           # key: name, value: id
+    for d in result:
+        dashboard2id[d['name']] = d['dashboardid']
+    return dashboard2id
 
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
@@ -890,7 +899,28 @@ def import_valuemap(zabbix, yml, valuemap2valuemapid):
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache, usermacro_cache, globalmacro_cache, valuemap_cache, graph_cache, item_cache, itemproto_cache, graphproto_cache):
+def import_dashboard(zabbix, yml, dashboard2id, user2userid, usergroup2usergroupid):
+    "Import dashboard from YAML. Return created object, None on error, True if object already exists"
+    if yml['name'] in dashboard2id: return True # skip existing objects
+
+    result = None
+    try:
+        yml['userid'] = user2userid[yml['userid']]
+        for u in yml['users']:
+            u['userid'] = user2userid[u['userid']]
+        for ug in yml['userGroups']:
+            ug['usrgrpid'] = usergroup2usergroupid[ug['usrgrpid']]
+
+        result = zabbix.dashboard.create(yml)
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            result = None
+            logging.exception(e)
+    return result
+
+def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache, usermacro_cache, globalmacro_cache, valuemap_cache, graph_cache, item_cache, itemproto_cache, graphproto_cache, dashboard_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
 
     try:
@@ -948,6 +978,8 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
             op_result = import_globalmacro(zabbix_, yml, globalmacro_cache)
         elif file_type == 'valuemap':
             op_result = import_valuemap(zabbix_, yml, valuemap_cache)
+        elif file_type == 'dashboard':
+            op_result = import_dashboard(zabbix_, yml, dashboard_cache, users_cache, usergroup_cache)
         else:
             logging.error("This file type not yet implemented, skipping...")
     except Exception as e:
@@ -993,7 +1025,8 @@ def parse_args():
         "usermacro",
         "proxy",
         "image",
-        "globalmacro"
+        "globalmacro",
+        "dashboard",
     ], default="autoguess", help="Zabbix object type, default is %(default)s")
     parser.add_argument("FILE", help="YAML file to import from",nargs='+')
 
@@ -1037,6 +1070,7 @@ if __name__ == "__main__":
         item2itemid = {}
         itemproto2itemid = {}
         graphproto2itemid = {}
+        dashboard2id = {}
 
         # load only needed caches:
         if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action', 'screen'):
@@ -1047,9 +1081,9 @@ if __name__ == "__main__":
             proxy2proxyid = get_proxy_cache(zabbix_)
         if args.type in ('autoguess', 'host', 'action', 'usermacro'):
             host2hostid = get_hosts_cache(zabbix_)
-        if args.type in ('autoguess', 'usergroup', 'action', 'user', 'screen'):
+        if args.type in ('autoguess', 'usergroup', 'action', 'user', 'screen', 'dashboard'):
             usergroup2usergroupid = get_usergroup_cache(zabbix_)
-        if args.type in ('autoguess', 'action', 'user', 'screen'):
+        if args.type in ('autoguess', 'action', 'user', 'screen', 'dashboard'):
             user2userid = get_users_cache(zabbix_)
         if args.type in ('autoguess', 'action', 'user'):
             mediatype2mediatypeid = get_mediatype_cache(zabbix_)
@@ -1068,6 +1102,8 @@ if __name__ == "__main__":
             globalmacro2globalmacroid = get_globalmacro_cache(zabbix_)
         if args.type in ('autoguess', 'valuemap'):
             valuemap2valuemapid = get_valuemap_cache(zabbix_)
+        if args.type in ('autoguess', 'dashboard'):
+            dashboard2id = get_dashboard_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
@@ -1093,6 +1129,7 @@ if __name__ == "__main__":
                 item_cache=item2itemid,
                 itemproto_cache=itemproto2itemid,
                 graphproto_cache=graphproto2itemid,
+                dashboard_cache=dashboard2id,
             )
             if not r: result = False
     except Exception as e:
