@@ -621,7 +621,7 @@ def import_action(api_version, zabbix, yml, action2actionid, template2templateid
 
     result = None
     try:
-        # resolve template/group/mediatype/usergroup names:
+        # resolve template/group/mediatype/usergroup/host names:
         for action_type in ('operations', 'acknowledgeOperations', 'recoveryOperations'):
             for op in yml[action_type]:
                 if 'optemplate' in op:
@@ -634,6 +634,10 @@ def import_action(api_version, zabbix, yml, action2actionid, template2templateid
                     for opmg in op['opmessage_grp']: opmg['usrgrpid'] = usergroup2usergroupid[opmg['usrgrpid']]
                 if 'opmessage_usr' in op:
                     for opmg in op['opmessage_usr']: opmg['userid'] = user2userid[opmg['userid']]
+                if 'opcommand_hst' in op:
+                    for opcmd in op['opcommand_hst']: opcmd['hostid'] = host2hostid[opcmd['hostid']]
+                if 'opcommand_grp' in op:
+                    for opcmd in op['opcommand_grp']: opcmd['groupid'] = group2groupid[opcmd['groupid']]
 
         for condition in yml['filter']['conditions']:
             if condition['conditiontype'] == 0: # hostgroup
