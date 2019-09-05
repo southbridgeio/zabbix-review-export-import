@@ -395,6 +395,9 @@ def main(zabbix_, save_yaml, directory):
             ug['usrgrpid'] = usergroupid2usergroup[ug['usrgrpid']]
         for w in d['widgets']:
             del w['widgetid']
+            for f in w['fields']:
+                if f['name'] == 'graphid':
+                    f['value'] = graphid2graph[f['value']]
 
     dumps_json(object='dashboards', data=dashboards, directory=directory, save_yaml=save_yaml, drop_keys=['dashboardid'])
 

@@ -905,7 +905,7 @@ def import_valuemap(zabbix, yml, valuemap2valuemapid):
             logging.exception(e)
     return result
 
-def import_dashboard(api_version, zabbix, yml, dashboard2id, user2userid, usergroup2usergroupid):
+def import_dashboard(api_version, zabbix, yml, dashboard2id, user2userid, usergroup2usergroupid, graph2graphid):
     "Import dashboard from YAML. Return created object, None on error, True if object already exists"
     if yml['name'] in dashboard2id: return True # skip existing objects
 
@@ -917,48 +917,32 @@ def import_dashboard(api_version, zabbix, yml, dashboard2id, user2userid, usergr
         for ug in yml['userGroups']:
             ug['usrgrpid'] = usergroup2usergroupid[ug['usrgrpid']]
         for w in yml['widgets']:
+            for f in w['fields']:
+                if f['name'] == 'graphid':
+                    f['value'] = graph2graphid[f['value']]
+
             if api_version >= parse_version("4.0"):
-                if w['type'] == 'stszbx':
-                    w['type'] = 'systeminfo'
-                elif w['type'] == 'actlog':
-                    w['type'] = 'actionlog'
-                elif w['type'] == 'dscvry':
-                    w['type'] = 'discovery'
-                elif w['type'] == 'favgrph':
-                    w['type'] = 'favgraphs'
-                elif w['type'] == 'favmap':
-                    w['type'] = 'favmaps'
-                elif w['type'] == 'favscr':
-                    w['type'] = 'favscreens'
-                elif w['type'] == 'sysmap':
-                    w['type'] = 'map'
-                elif w['type'] == 'navigationtree':
-                    w['type'] = 'navtree'
-                elif w['type'] == 'syssum':
-                    w['type'] = 'systeminfo'
-                elif w['type'] == 'webovr':
-                    w['type'] = 'web'
+                if w['type'] == 'stszbx': w['type'] = 'systeminfo'
+                elif w['type'] == 'actlog': w['type'] = 'actionlog'
+                elif w['type'] == 'dscvry': w['type'] = 'discovery'
+                elif w['type'] == 'favgrph': w['type'] = 'favgraphs'
+                elif w['type'] == 'favmap': w['type'] = 'favmaps'
+                elif w['type'] == 'favscr': w['type'] = 'favscreens'
+                elif w['type'] == 'sysmap': w['type'] = 'map'
+                elif w['type'] == 'navigationtree': w['type'] = 'navtree'
+                elif w['type'] == 'syssum': w['type'] = 'systeminfo'
+                elif w['type'] == 'webovr': w['type'] = 'web'
             elif api_version < parse_version("4.0"):
-                if w['type'] == 'systeminfo':
-                    w['type'] = 'stszbx'
-                elif w['type'] == 'actionlog':
-                    w['type'] = 'actlog'
-                elif w['type'] == 'discovery':
-                    w['type'] = 'dscvry'
-                elif w['type'] == 'favgraphs':
-                    w['type'] = 'favgrph'
-                elif w['type'] == 'favmaps':
-                    w['type'] = 'favmap'
-                elif w['type'] == 'favscreens':
-                    w['type'] = 'favscr'
-                elif w['type'] == 'map':
-                    w['type'] = 'sysmap'
-                elif w['type'] == 'navtree':
-                    w['type'] = 'navigationtree'
-                elif w['type'] == 'systeminfo':
-                    w['type'] = 'syssum'
-                elif w['type'] == 'web':
-                    w['type'] = 'webovr'
+                if w['type'] == 'systeminfo': w['type'] = 'stszbx'
+                elif w['type'] == 'actionlog': w['type'] = 'actlog'
+                elif w['type'] == 'discovery': w['type'] = 'dscvry'
+                elif w['type'] == 'favgraphs': w['type'] = 'favgrph'
+                elif w['type'] == 'favmaps': w['type'] = 'favmap'
+                elif w['type'] == 'favscreens': w['type'] = 'favscr'
+                elif w['type'] == 'map': w['type'] = 'sysmap'
+                elif w['type'] == 'navtree': w['type'] = 'navigationtree'
+                elif w['type'] == 'systeminfo': w['type'] = 'syssum'
+                elif w['type'] == 'web': w['type'] = 'webovr'
 
         result = zabbix.dashboard.create(yml)
     except ZabbixAPIException as e:
@@ -1028,7 +1012,7 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
         elif file_type == 'valuemap':
             op_result = import_valuemap(zabbix_, yml, valuemap_cache)
         elif file_type == 'dashboard':
-            op_result = import_dashboard(api_version, zabbix_, yml, dashboard_cache, users_cache, usergroup_cache)
+            op_result = import_dashboard(api_version, zabbix_, yml, dashboard_cache, users_cache, usergroup_cache, graph_cache)
         else:
             logging.error("This file type not yet implemented, skipping...")
     except Exception as e:
@@ -1136,7 +1120,7 @@ if __name__ == "__main__":
             user2userid = get_users_cache(zabbix_)
         if args.type in ('autoguess', 'action', 'user'):
             mediatype2mediatypeid = get_mediatype_cache(zabbix_)
-        if args.type in ('autoguess', 'screen'):
+        if args.type in ('autoguess', 'screen', 'dashboard'):
             screen2screenid = get_screen_cache(zabbix_)
             graph2graphid = get_graph_cache(zabbix_)
             item2itemid = get_item_cache(zabbix_)
