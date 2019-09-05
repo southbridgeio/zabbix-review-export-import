@@ -286,7 +286,7 @@ def main(zabbix_, save_yaml, directory):
             elif si['resourcetype'] == '9':                            # triggers overview
                 pass
             elif si['resourcetype'] == '10':                           # data overview
-                pass                       # FIXME
+                si['resourceid'] = groupid2group[si['resourceid']]
             elif si['resourcetype'] == '14':                           # latest host group issues
                 pass
             elif si['resourcetype'] == '16':                           # latest host issues

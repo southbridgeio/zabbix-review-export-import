@@ -747,7 +747,7 @@ def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2media
             logging.exception(e)
     return result
 
-def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroupid, graph2graphid, item2itemid, itemproto2itemid, graphproto2itemid):
+def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroupid, graph2graphid, item2itemid, itemproto2itemid, graphproto2itemid, group2groupid):
     "Import screen from YAML. Return created object, None on error, True if object already exists"
     if yml['name'] in screen2screenid: return True # skip existing objects
 
@@ -775,7 +775,7 @@ def import_screen(zabbix, yml, screen2screenid, user2userid, usergroup2usergroup
             elif si['resourcetype'] == 9:                            # triggers overview
                 pass
             elif si['resourcetype'] == 10:                           # data overview
-                pass                       # FIXME
+                si['resourceid'] = group2groupid[si['resourceid']]
             elif si['resourcetype'] == 14:                           # latest host group issues
                 pass
             elif si['resourcetype'] == 16:                           # latest host issues
@@ -939,7 +939,7 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
         elif file_type == "user":
             op_result = import_user(zabbix_, yml, usergroup_cache, users_cache, mediatype_cache)
         elif file_type == 'screen':
-            op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache, graph_cache, item_cache, itemproto_cache, graphproto_cache)
+            op_result = import_screen(zabbix_, yml, screen_cache, users_cache, usergroup_cache, graph_cache, item_cache, itemproto_cache, graphproto_cache, group_cache)
         elif file_type == 'action':
             op_result = import_action(api_version, zabbix_, yml, action_cache, template_cache, group_cache, mediatype_cache, usergroup_cache, users_cache, host_cache, trigger_cache)
         elif file_type == 'usermacro':
@@ -1035,7 +1035,7 @@ if __name__ == "__main__":
         valuemap2valuemapid = {}
 
         # load only needed caches:
-        if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action'):
+        if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action', 'screen'):
             group2groupid = get_hostgroups_cache(zabbix_)
         if args.type in ('autoguess', 'host', 'template', 'action', 'usermacro'):
             template2templateid = get_template_cache(zabbix_)
