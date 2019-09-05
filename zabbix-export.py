@@ -232,6 +232,8 @@ def main(zabbix_, save_yaml, directory):
 
     logging.info("Processing maintenances...")
     maintenances = zabbix_.maintenance.get(selectGroups=['name'], selectHosts=["name"], selectTimeperiods='extend')
+    # sort hosts in maintenances by hostname to provide stable order:
+    for m in maintenances: m['hosts'] = sorted(m['hosts'], key = lambda i: i['name'])
     dumps_json(object='maintenances', data=maintenances, save_yaml=save_yaml, directory=directory, drop_keys=["maintenanceid"])
 
     logging.info("Processing screens...")
