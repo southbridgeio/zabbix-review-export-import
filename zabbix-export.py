@@ -385,6 +385,19 @@ def main(zabbix_, save_yaml, directory):
             umacro['hostid'] = templateid2template[umacro['hostid']]
     dumps_json(object='usermacro', data=user_macroses, key=('macro', 'hostid'), save_yaml=save_yaml, directory=directory, drop_keys=["hostmacroid"])
 
+    logging.info("Processing dashboards...")
+    dashboards = zabbix_.dashboard.get(selectWidgets="extend", selectUsers="extend", selectUserGroups="extend")
+    for d in dashboards:
+        d['userid'] = userid2user[d['userid']]
+        for u in d['users']:
+            u['userid'] = userid2user[u['userid']]
+        for ug in d['userGroups']:
+            ug['usrgrpid'] = usergroupid2usergroup[ug['usrgrpid']]
+        for w in d['widgets']:
+            del w['widgetid']
+
+    dumps_json(object='dashboards', data=dashboards, directory=directory, save_yaml=save_yaml, drop_keys=['dashboardid'])
+
 def environ_or_required(key):
     "Argparse environment vars helper"
     if os.environ.get(key):
