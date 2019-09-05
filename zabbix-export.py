@@ -237,13 +237,64 @@ def main(zabbix_, save_yaml, directory):
     dumps_json(object='maintenances', data=maintenances, save_yaml=save_yaml, directory=directory, drop_keys=["maintenanceid"])
 
     logging.info("Processing screens...")
-    screens = zabbix_.screen.get(selectUsers='extend', selectUserGroups='extend', selectScreenItems='extend')
 
-    # resolve users/usergroups:
+    graphid2graph = {}          # key: graphid, value: "hostname,graphname"
+    graphs = zabbix_.graph.get(output=['graphid', 'name'], selectHosts=["name"], templated=False)
+    for g in graphs:
+        if g['hosts']:          # graph not in template
+            graphid2graph[g['graphid']] = '{},{}'.format(g['hosts'][0]['name'],g['name'])
+
+    itemid2item = {}            # key: itemid, value: "hostname, key_"
+    items = zabbix_.item.get(output=['key_', 'itemid'], selectHosts=["name"], webitems=True)
+    for i in items:
+        if i['hosts']:          # item not in template
+            itemid2item[i['itemid']] = '{},{}'.format(i['hosts'][0]['name'],i['key_'])
+
+    itemid2proto = {}           # key: itemid, value: "hostname, key_"
+    itemprototypes = zabbix_.itemprototype.get(output=['key_', 'itemid'], selectHosts=['name'])
+    for i in itemprototypes:
+        if i['hosts']:
+            itemid2proto[i['itemid']] = '{},{}'.format(i['hosts'][0]['name'],i['key_'])
+
+    graphid2proto = {}          # key: graphid, value: "hostname, graphname"
+    graphprototypes = zabbix_.graphprototype.get(output=['graphid', 'name'], selectHosts=['name'])
+    for gp in graphprototypes:
+        if gp['hosts']:
+            graphid2proto[gp['graphid']] = '{},{}'.format(gp['hosts'][0]['name'],gp['name'])
+
+    screens = zabbix_.screen.get(selectUsers='extend', selectUserGroups='extend', selectScreenItems='extend')
     for screen in screens:
+        # resolve users/usergroups/screenitems:
         screen['userid'] = userid2user[screen['userid']]
         screen['users'] = [{'permission': user['permission'], 'userid': userid2user[user['userid']]} for user in screen['users']]
         screen['userGroups'] = [{"permission": group['permission'], "usrgrpid": usergroupid2usergroup[group['usrgrpid']]} for group in screen['userGroups']]
+        for si in screen['screenitems']:
+            del si['screenid']
+            del si['screenitemid']
+            if si['resourcetype'] == '0': # graph
+                si['resourceid'] = graphid2graph[si['resourceid']]
+            elif si['resourcetype'] == '1':                            # simple graph
+                si['resourceid'] = itemid2item[si['resourceid']]
+            elif si['resourcetype'] == '2':                            # map
+                pass
+            elif si['resourcetype'] == '3':                            # plain text
+                pass                      # FIXME
+            elif si['resourcetype'] == '5':                            # triggers info
+                pass
+            elif si['resourcetype'] == '8':                            # screen
+                pass
+            elif si['resourcetype'] == '9':                            # triggers overview
+                pass
+            elif si['resourcetype'] == '10':                           # data overview
+                pass                       # FIXME
+            elif si['resourcetype'] == '14':                           # latest host group issues
+                pass
+            elif si['resourcetype'] == '16':                           # latest host issues
+                pass
+            elif si['resourcetype'] == '19':                           # simple graph prototype
+                si['resourceid'] = itemid2proto[si['resourceid']]
+            elif si['resourcetype'] == '20':                           # graph prototype
+                si['resourceid'] = graphid2proto[si['resourceid']]
 
     dumps_json(object='screens', data=screens, save_yaml=save_yaml, directory=directory, drop_keys=["screenid"])
 
