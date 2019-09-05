@@ -295,6 +295,23 @@ def main(zabbix_, save_yaml, directory):
                     for aa in op['opmessage_usr']:
                         aa['userid'] = userid2user[aa['userid']]
                         del aa['operationid']
+                if 'opcommand' in op:
+                    del op['opcommand']['operationid']
+                if 'opcommand_hst' in op:
+                    for aa in op['opcommand_hst']:
+                        if str(aa['hostid']) != '0': # '0' means current host
+                            aa['hostid'] = hostid2host[aa['hostid']]
+                        del aa['operationid']
+                        del aa['opcommand_hstid']
+                if 'opcommand_grp' in op:
+                    for aa in op['opcommand_grp']:
+                        aa['groupid'] = groupid2group[aa['groupid']]
+                        del aa['operationid']
+                        del aa['opcommand_grpid']
+                if f'opconditions' in op:
+                    for aa in op['opconditions']:
+                        del aa['operationid']
+                        del aa['opconditionid']
         for condition in action['filter']['conditions']:
             if condition['conditiontype'] == '0': # hostgroup
                 condition['value'] = groupid2group[condition['value']]
