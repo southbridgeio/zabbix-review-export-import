@@ -212,6 +212,7 @@ def get_graphproto_cache(zabbix):
     for gp in result:
         if gp['hosts']:
             graphproto2itemid['{},{}'.format(gp['hosts'][0]['name'],gp['name'])] = gp['graphid']
+    return graphproto2itemid
 
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
