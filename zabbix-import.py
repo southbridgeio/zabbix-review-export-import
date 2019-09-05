@@ -694,10 +694,16 @@ def import_action(api_version, zabbix, yml, action2actionid, template2templateid
             if condition['conditiontype'] == 2: # trigger
                 condition['value'] = trigger2triggerid[(condition['value'],condition['value2'])]
                 condition['value2'] = ''
-            if condition['conditiontype'] == 16 and condition['operator'] == 7 and api_version >= parse_version("4"):# not in maintenance/suppression
+            # 3->4 import:
+            if condition['conditiontype'] == 16 and condition['operator'] == 7 and api_version >= parse_version("4.0"):# not in maintenance/suppression
                 condition['operator'] = 11 # new in 4.x: see https://www.zabbix.com/documentation/4.2/manual/api/reference/action/object#action_filter_condition
-            if condition['conditiontype'] == 16 and condition['operator'] == 4 and api_version >= parse_version("4"): # in maintenance/suppression
+            if condition['conditiontype'] == 16 and condition['operator'] == 4 and api_version >= parse_version("4.0"): # in maintenance/suppression
                 condition['operator'] = 10 # new in 4.x: see https://www.zabbix.com/documentation/4.2/manual/api/reference/action/object#action_filter_condition
+            # 4->3 import:
+            if condition['conditiontype'] == 16 and condition['operator'] == 11 and api_version < parse_version("4.0"):# not in maintenance/suppression
+                condition['operator'] = 7
+            if condition['conditiontype'] == 16 and condition['operator'] == 10 and api_version < parse_version("4.0"): # in maintenance/suppression
+                condition['operator'] = 4
 
         result = zabbix.action.create(yml)
     except ZabbixAPIException as e:
