@@ -215,7 +215,10 @@ def main(zabbix_, save_yaml, directory):
     logging.info("Processing users...")
     users = zabbix_.user.get(selectMedias='extend', selectMediatypes='extend', selectUsrgrps='extend')
     userid2user = {}            # key: userid, value: user alias
-    for u in users: userid2user[u['userid']] = u['alias']
+    for u in users:
+        userid2user[u['userid']] = u['alias']
+        for ug in u['usrgrps']:
+            del ug['usrgrpid']
     dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory, drop_keys=["userid", "attempt_clock", "attempt_failed", "attempt_ip"])
 
     logging.info("Processing proxy...")
