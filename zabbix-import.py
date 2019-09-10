@@ -607,6 +607,13 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
         else:
             macroses = ""
 
+        # TODO/FIXME:
+        # - items
+        # - graphs
+        # - screens
+        # - triggers
+        # - discovery_rules (including item/trigger/graph prototypes)
+
         # create template:
         result = zabbix.template.create({
             "host": new_template['template'],
