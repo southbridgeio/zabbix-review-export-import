@@ -410,6 +410,7 @@ def main(zabbix_, save_yaml, directory):
             ug['usrgrpid'] = usergroupid2usergroup[ug['usrgrpid']]
         for w in d['widgets']:
             del w['widgetid']
+            w['fields'] = sorted(w['fields'], key = lambda i: i['name']) # sort to stabilize dumps
             for f in w['fields']:
                 if f['name'] == 'graphid':
                     f['value'] = graphid2graph[f['value']]
