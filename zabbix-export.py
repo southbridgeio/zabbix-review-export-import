@@ -241,7 +241,7 @@ def main(zabbix_, save_yaml, directory):
     maintenances = zabbix_.maintenance.get(selectGroups=['name'], selectHosts=["name"], selectTimeperiods='extend')
     # sort hosts in maintenances by hostname to provide stable order:
     for m in maintenances:
-        m['hosts'] = sorted(m['hosts'], key = lambda i: i['name'])
+        m['hosts'] = sorted(m['hosts'], key = lambda i: i['name']) # sort to stabilize dumps
         for h in m['hosts']:
             del h['hostid']
         for tp in m['timeperiods']:
@@ -333,6 +333,7 @@ def main(zabbix_, save_yaml, directory):
 
     # resolve templateids/groupids/mediatypeids/userids/usergroupids:
     for action in actions:
+        action['filter']['conditions'] = sorted(action['filter']['conditions'], key = lambda i: i['formulaid']) # sort to stabilize dumps
         action['filter']['formula'] = action['filter']['eval_formula']
         del action['filter']['eval_formula']
         for action_type in ('operations', 'acknowledgeOperations', 'recoveryOperations'):
