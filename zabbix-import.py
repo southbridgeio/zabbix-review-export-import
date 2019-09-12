@@ -1006,6 +1006,12 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
         elif file_type == 'dashboard':
             op_result = import_dashboard(api_version, zabbix_, yml, dashboard_cache, users_cache, usergroup_cache, graph_cache)
         else:
+            # FIXME/TODO:
+            # - import_maintenance
+            # - import_mediatype
+            # - import_map
+            # - import_service
+            # - import_image
             logging.error("This file type not yet implemented, skipping...")
     except Exception as e:
         logging.exception(pformat(e))
