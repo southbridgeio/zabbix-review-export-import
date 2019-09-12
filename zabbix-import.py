@@ -305,6 +305,8 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
             "templates": linked_templates,
             "groups": groups,
             "inventory_mode": host['inventory']['inventory_mode'] if 'inventory' in host else 0,
+            "ipmi_authtype": host['ipmi_authtype'] if 'ipmi_authtype' in host else -1,
+            "ipmi_privilege": host['ipmi_privilege'] if 'ipmi_privilege' in host else 2,
             })
         logging.debug(pformat(result))
 
