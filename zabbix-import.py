@@ -727,23 +727,8 @@ def import_user(zabbix, yml, usergroup2usergroupid, user2userid, mediatype2media
 
     result = None
     try:
-        groups = []
-        for g in yml['usrgrps']:
-            groups.append({"usrgrpid": usergroup2usergroupid[g['name']]})
-
-        mediatypeid2mediatype = {'0': '__ALL__'} # key: mediatypeid, value: mediatype name
-        for mt in yml['mediatypes']:
-            mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
-
-        medias = []
-        for m in yml['medias']:
-            medias.append({
-                "active": m['active'],
-                "mediatypeid": mediatype2mediatypeid[mediatypeid2mediatype[m['mediatypeid']]],
-                "period": m['period'],
-                "sendto": m['sendto'],
-                "severity": m['severity'] ,
-            })
+        groups = [{"usrgrpid": usergroup2usergroupid[g['name']]} for g in yml['usrgrps']]
+        medias = [{"active": m['active'], "mediatypeid": mediatype2mediatypeid[m['mediatypeid']], "period": m['period'], "sendto": m['sendto'], "severity": m['severity']} for m in yml['medias']]
 
         result = zabbix.user.create({
             "alias": yml['alias'],
