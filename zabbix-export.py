@@ -336,7 +336,9 @@ def main(zabbix_, save_yaml, directory):
         action['filter']['conditions'] = sorted(action['filter']['conditions'], key = lambda i: i['formulaid']) # sort to stabilize dumps
         action['filter']['formula'] = action['filter']['eval_formula']
         del action['filter']['eval_formula']
-        for action_type in ('operations', 'acknowledgeOperations', 'recoveryOperations'):
+        action['recovery_operations'] = action.pop('recoveryOperations') # rename key for easy import
+        action['acknowledge_operations'] = action.pop('acknowledgeOperations') # rename key for easy import
+        for action_type in ('operations', 'acknowledge_operations', 'recovery_operations'):
             for op in action[action_type]:
                 del op['actionid']
                 del op['operationid']

@@ -674,7 +674,7 @@ def import_action(api_version, zabbix, yml, action2actionid, template2templateid
     result = None
     try:
         # resolve template/group/mediatype/usergroup/host names:
-        for action_type in ('operations', 'acknowledgeOperations', 'recoveryOperations'):
+        for action_type in ('operations', 'acknowledge_operations', 'recovery_operations'):
             for op in yml[action_type]:
                 if 'optemplate' in op:
                     for opt in op['optemplate']: opt['templateid'] = template2templateid[opt['templateid']]
