@@ -242,10 +242,15 @@ def main(zabbix_, save_yaml, directory):
     # sort hosts in maintenances by hostname to provide stable order:
     for m in maintenances:
         m['hosts'] = sorted(m['hosts'], key = lambda i: i['name']) # sort to stabilize dumps
+        m['groups'] = sorted(m['groups'], key = lambda i: i['name']) # sort to stabilize dumps
         for h in m['hosts']:
             del h['hostid']
+        for g in m['groups']:
+            del h['groupid']
         for tp in m['timeperiods']:
             del tp['timeperiodid']
+        m['hostids'] = m.pop('hosts') # rename for easy import
+        m['groupids'] = m.pop('groups') # rename for easy import
     dumps_json(object='maintenances', data=maintenances, save_yaml=save_yaml, directory=directory, drop_keys=["maintenanceid"])
 
     logging.info("Processing screens...")

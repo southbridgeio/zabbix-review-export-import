@@ -223,6 +223,14 @@ def get_dashboard_cache(zabbix):
         dashboard2id[d['name']] = d['dashboardid']
     return dashboard2id
 
+def get_maint_cache(zabbix):
+    "Return dict maintenance name=>id"
+    result = zabbix.maintenance.get(output=['name', 'maintenanceid'])
+    maintenance2id = {}         # key: name, value: id
+    for m in result:
+        maintenance2id['name'] = m['maintenanceid']
+    return maintenance2id
+
 def import_group(zabbix, yml, group2groupid):
     "Import hostgroup from YAML. Return created object, None on error, True if object already exist"
     g = yml['groups']['group']
@@ -950,7 +958,26 @@ def import_dashboard(api_version, zabbix, yml, dashboard2id, user2userid, usergr
             logging.exception(e)
     return result
 
-def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache, usermacro_cache, globalmacro_cache, valuemap_cache, graph_cache, item_cache, itemproto_cache, graphproto_cache, dashboard_cache):
+def import_maintenance(zabbix, yml, maintenance2id, host2hostid, group2groupid):
+    "Import maintenance from YAML. Return created object, None on error, True if object already exists"
+    if yml['name'] in maintenance2id: return True # skip existing objects
+
+    result = None
+    try:
+        yml['hostids'] = [host2hostid[h['name']] for h in yml['hostids']] # resolve hosts
+        yml['groupids'] = [group2groupid[g['name']] for g in yml['groupids']] # resolve groups
+        # FIXME: add new in 4.x tags import
+
+        result = zabbix.maintenance.create(yml)
+    except ZabbixAPIException as e:
+        if 'already exist' in str(e):
+            result = True
+        else:
+            result = None
+            logging.exception(e)
+    return result
+
+def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache, proxy_cache, host_cache, usergroup_cache, users_cache, mediatype_cache, screen_cache, action_cache, trigger_cache, usermacro_cache, globalmacro_cache, valuemap_cache, graph_cache, item_cache, itemproto_cache, graphproto_cache, dashboard_cache, maint_cache):
     "Main function: import YAML_FILE with type FILE_TYPE in ZABBIX_. Return None on error"
 
     try:
@@ -1010,9 +1037,10 @@ def main(zabbix_, yaml_file, file_type, api_version, group_cache, template_cache
             op_result = import_valuemap(zabbix_, yml, valuemap_cache)
         elif file_type == 'dashboard':
             op_result = import_dashboard(api_version, zabbix_, yml, dashboard_cache, users_cache, usergroup_cache, graph_cache)
+        elif file_type == 'maintenance':
+            op_result = import_maintenance(zabbix_, yml, maint_cache, host_cache, group_cache)
         else:
             # FIXME/TODO:
-            # - import_maintenance
             # - import_mediatype
             # - import_map
             # - import_service
@@ -1107,6 +1135,7 @@ if __name__ == "__main__":
         itemproto2itemid = {}
         graphproto2itemid = {}
         dashboard2id = {}
+        maintenance2id = {}
 
         # load only needed caches:
         if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action', 'screen'):
@@ -1140,6 +1169,8 @@ if __name__ == "__main__":
             valuemap2valuemapid = get_valuemap_cache(zabbix_)
         if args.type in ('autoguess', 'dashboard'):
             dashboard2id = get_dashboard_cache(zabbix_)
+        if args.type in ('autoguess', 'maintenance'):
+            maintenance2id = get_maint_cache(zabbix_)
 
         for f in args.FILE:
             logging.info("Trying to load Zabbix object (type: {}) from: {}".format(args.type, os.path.abspath(f)))
@@ -1166,6 +1197,7 @@ if __name__ == "__main__":
                 itemproto_cache=itemproto2itemid,
                 graphproto_cache=graphproto2itemid,
                 dashboard_cache=dashboard2id,
+                maint_cache=maintenance2id,
             )
             if not r: result = False
     except Exception as e:
