@@ -304,6 +304,7 @@ def import_host(api_version, zabbix, yml, group2groupid, template2templateid, pr
             "macros": macroses,
             "templates": linked_templates,
             "groups": groups,
+            "inventory_mode": host['inventory']['inventory_mode'] if 'inventory' in host else 0,
             })
         logging.debug(pformat(result))
 
