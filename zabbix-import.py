@@ -1138,13 +1138,13 @@ if __name__ == "__main__":
         maintenance2id = {}
 
         # load only needed caches:
-        if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action', 'screen'):
+        if args.type in ('autoguess', 'group', 'host', 'template', 'usergroup', 'action', 'screen', 'maintenance'):
             group2groupid = get_hostgroups_cache(zabbix_)
         if args.type in ('autoguess', 'host', 'template', 'action', 'usermacro'):
             template2templateid = get_template_cache(zabbix_)
         if args.type in ('autoguess', 'proxy', 'host'):
             proxy2proxyid = get_proxy_cache(zabbix_)
-        if args.type in ('autoguess', 'host', 'action', 'usermacro'):
+        if args.type in ('autoguess', 'host', 'action', 'usermacro', 'maintenance'):
             host2hostid = get_hosts_cache(zabbix_)
         if args.type in ('autoguess', 'usergroup', 'action', 'user', 'screen', 'dashboard'):
             usergroup2usergroupid = get_usergroup_cache(zabbix_)
