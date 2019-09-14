@@ -74,12 +74,12 @@ XML new zabbix:
    SAVE_YAML: ""
  <<: *review-manual
 
-XML SCHEDULE new zabbix:
- variables:
-   GITLAB_REPO: $NEW_XML_REPO
-   ZABBIX_URL: $NEW_ZABBIX_URL
-   SAVE_YAML: ""
- <<: *review-schedules
+# XML SCHEDULE new zabbix:
+#  variables:
+#    GITLAB_REPO: $NEW_XML_REPO
+#    ZABBIX_URL: $NEW_ZABBIX_URL
+#    SAVE_YAML: ""
+#  <<: *review-schedules
 
 YAML old zabbix:
  variables:
@@ -102,9 +102,9 @@ XML old zabbix:
    SAVE_YAML: ""
  <<: *review-manual
 
-XML SCHEDULE old zabbix:
- variables:
-   GITLAB_REPO: $OLD_XML_REPO
-   ZABBIX_URL: $OLD_ZABBIX_URL
-   SAVE_YAML: ""
- <<: *review-schedules
+# XML SCHEDULE old zabbix:
+#  variables:
+#    GITLAB_REPO: $OLD_XML_REPO
+#    ZABBIX_URL: $OLD_ZABBIX_URL
+#    SAVE_YAML: ""
+#  <<: *review-schedules
