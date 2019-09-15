@@ -116,7 +116,7 @@ def convert_to_yaml_without_none(txt):
     raw = remove_none(raw)
     represent_dict_order = lambda self, data: self.represent_mapping('tag:yaml.org,2002:map', data.items())  # noqa
     yaml.add_representer(OrderedDict, represent_dict_order)
-    txt = yaml.dump(raw, default_flow_style=False, width=10000, allow_unicode=True)
+    txt = yaml.dump(raw, default_flow_style=False, width=10000, allow_unicode=True, explicit_start=True, explicit_end=True)
     return txt
 
 
