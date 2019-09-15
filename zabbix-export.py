@@ -65,6 +65,7 @@ def order_data(data):
             data[key] = order_data(value)
         return OrderedDict(sorted(data.items()))
     elif isinstance(data, list):
+        data.sort(key=lambda x: str(x))
         return [order_data(x) for x in data]
     else:
         return data
