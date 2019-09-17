@@ -5,12 +5,9 @@ variables:
   ZABBIX_USERNAME: $ZBX_USER # Zabbix user with admin privilege
   ZABBIX_PASSWORD: $ZBX_PASSWORD
   GITLAB_GROUP: $GITLAB_GROUP
-  OLD_ZABBIX_URL: $OLD_ZABBIX_URL
   NEW_ZABBIX_URL: $NEW_ZABBIX_URL
   NEW_YAML_REPO: $NEW_YAML_REPO
   NEW_XML_REPO: $NEW_XML_REPO
-  OLD_YAML_REPO: $OLD_YAML_REPO
-  OLD_XML_REPO: $OLD_XML_REPO
   USER_EMAIL: $USER_EMAIL
   USER_NAME: $USER_NAME
 
@@ -78,33 +75,5 @@ XML new zabbix:
 #  variables:
 #    GITLAB_REPO: $NEW_XML_REPO
 #    ZABBIX_URL: $NEW_ZABBIX_URL
-#    SAVE_YAML: ""
-#  <<: *review-schedules
-
-YAML old zabbix:
- variables:
-   GITLAB_REPO: $OLD_YAML_REPO
-   ZABBIX_URL: $OLD_ZABBIX_URL
-   SAVE_YAML: --save-yaml
- <<: *review-manual
-
-YAML SCHEDULE old zabbix:
- variables:
-   GITLAB_REPO: $OLD_YAML_REPO
-   ZABBIX_URL: $OLD_ZABBIX_URL
-   SAVE_YAML: --save-yaml
- <<: *review-schedules
-
-XML old zabbix:
- variables:
-   GITLAB_REPO: $OLD_XML_REPO
-   ZABBIX_URL: $OLD_ZABBIX_URL
-   SAVE_YAML: ""
- <<: *review-manual
-
-# XML SCHEDULE old zabbix:
-#  variables:
-#    GITLAB_REPO: $OLD_XML_REPO
-#    ZABBIX_URL: $OLD_ZABBIX_URL
 #    SAVE_YAML: ""
 #  <<: *review-schedules
