@@ -380,7 +380,7 @@ def main(zabbix_, save_yaml, directory):
                         aa['groupid'] = groupid2group[aa['groupid']]
                         del aa['operationid']
                         del aa['opcommand_grpid']
-                if f'opconditions' in op:
+                if 'opconditions' in op:
                     for aa in op['opconditions']:
                         del aa['operationid']
                         del aa['opconditionid']
