@@ -11,19 +11,24 @@ variables:
   NEW_XML_REPO: $NEW_XML_REPO
   USER_EMAIL: $USER_EMAIL
   USER_NAME: $USER_NAME
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
+
+cache:
+  paths:
+    - "$CI_PROJECT_DIR/pip-cache"
+  key: "$CI_PROJECT_ID"
 
 before_script:
   - date
-  - python -m pip install --user -r requirements.txt
 
 after_script:
   - date
 
 .review: &review
   tags:
-    - dind
-  image: python:3
+    - zabbix
   script:
+    - python3 -m pip install --user -r requirements.txt
     - git config --global user.email "$USER_EMAIL"
     - git config --global user.name "$USER_NAME"
     - git clone https://oauth2:$GITLAB_TOKEN@$GITLAB_FQDN/$GITLAB_GROUP/$GITLAB_REPO.git
@@ -31,7 +36,7 @@ after_script:
     - git checkout -b develop origin/develop || git checkout develop
     - git pull
     - rm -rf *
-    - python ../zabbix-export.py $SAVE_YAML
+    - python3 ../zabbix-export.py $SAVE_YAML
     - git add .
     - d=$(date +%Y-%m-%d)
     - "git commit -m':robot: Autobackup' ||:"
