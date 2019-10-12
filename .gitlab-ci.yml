@@ -1,3 +1,4 @@
+---
 variables:
 #  CI_DEBUG_TRACE: "true"
   GITLAB_TOKEN: $GITLAB_TOKEN # https://docs.gitlab.com/ce/user/profile/personal_access_tokens.html
@@ -36,7 +37,6 @@ after_script:
     - "git commit -m':robot: Autobackup' ||:"
     - git push origin develop
 
-
 .review-manual: &review-manual
   <<: *review
   when: manual
@@ -51,25 +51,25 @@ after_script:
 #
 # Example for you instance
 YAML new zabbix:
- variables:
-   GITLAB_REPO: $NEW_YAML_REPO
-   ZABBIX_URL: $NEW_ZABBIX_URL
-   SAVE_YAML: --save-yaml
- <<: *review-manual
+  variables:
+    GITLAB_REPO: $NEW_YAML_REPO
+    ZABBIX_URL: $NEW_ZABBIX_URL
+    SAVE_YAML: --save-yaml
+  <<: *review-manual
 
 YAML SCHEDULE new zabbix:
- variables:
-   GITLAB_REPO: $NEW_YAML_REPO
-   ZABBIX_URL: $NEW_ZABBIX_URL
-   SAVE_YAML: --save-yaml
- <<: *review-schedules
+  variables:
+    GITLAB_REPO: $NEW_YAML_REPO
+    ZABBIX_URL: $NEW_ZABBIX_URL
+    SAVE_YAML: --save-yaml
+  <<: *review-schedules
 
 XML new zabbix:
- variables:
-   GITLAB_REPO: $NEW_XML_REPO
-   ZABBIX_URL: $NEW_ZABBIX_URL
-   SAVE_YAML: ""
- <<: *review-manual
+  variables:
+    GITLAB_REPO: $NEW_XML_REPO
+    ZABBIX_URL: $NEW_ZABBIX_URL
+    SAVE_YAML: ""
+  <<: *review-manual
 
 # XML SCHEDULE new zabbix:
 #  variables:
@@ -77,3 +77,4 @@ XML new zabbix:
 #    ZABBIX_URL: $NEW_ZABBIX_URL
 #    SAVE_YAML: ""
 #  <<: *review-schedules
+...
