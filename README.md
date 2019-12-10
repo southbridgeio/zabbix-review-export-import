@@ -38,8 +38,8 @@ python ./zabbix-export.py --help
 # backup to current folder, save XML and JSON
 python ./zabbix-export.py --zabbix-url https://zabbix.example.com --zabbix-username user --zabbix-password password
 
-# backup zabbix configuration in YAML format
-python ./zabbix-export.py --save-yaml --zabbix-url https://zabbix.example.com --zabbix-username user --zabbix-password password
+# backup only hosts in YAML format
+python ./zabbix-export.py --save-yaml --zabbix-url https://zabbix.example.com --zabbix-username user --zabbix-password password --only hosts
 
 # backup to custom folder in YAML format
 python ./zabbix-export.py --save-yaml --directory /home/username/path/to/zabbix-yaml --zabbix-url https://zabbix.example.com --zabbix-username user --zabbix-password password
