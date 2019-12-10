@@ -168,8 +168,12 @@ def main(zabbix_, save_yaml, directory, only="all"):
         items = zabbix_api.get()
         for item in items:
             logging.debug("Processing {}...".format(item[name]))
-            txt = zabbix_.configuration.export(format='xml', options={type: [item[itemid]]})
-            dump_xml(object=type, txt=txt, name=item[name], save_yaml=save_yaml, directory=directory)
+            try:
+                txt = zabbix_.configuration.export(format='xml', options={type: [item[itemid]]})
+                dump_xml(object=type, txt=txt, name=item[name], save_yaml=save_yaml, directory=directory)
+            except Exception as e:
+                logging.error("Exception during export of template: {}".format(item[name]))
+                logging.error(e)
 
     if yaml:
         logging.info("Convert all format to yaml")
