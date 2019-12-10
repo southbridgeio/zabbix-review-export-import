@@ -13,6 +13,7 @@ import urllib3
 import yaml
 from pyzabbix import ZabbixAPI
 urllib3.disable_warnings()
+from pkg_resources import parse_version
 
 def remove_none(obj):
     """
@@ -174,6 +175,9 @@ def main(zabbix_, save_yaml, directory, only="all"):
             except Exception as e:
                 logging.error("Exception during export of template: {}".format(item[name]))
                 logging.error(e)
+
+    api_version = parse_version(zabbix_.apiinfo.version())
+    logging.debug('Source Zabbix server version: {}'.format(api_version))
 
     if yaml:
         logging.info("Convert all format to yaml")
