@@ -432,7 +432,7 @@ def main(zabbix_, save_yaml, directory, only="all"):
                     if f['name'] == 'graphid':
                         f['value'] = graphid2graph[f['value']]
 
-    dumps_json(object='dashboards', data=dashboards, directory=directory, save_yaml=save_yaml, drop_keys=['dashboardid'])
+        dumps_json(object='dashboards', data=dashboards, directory=directory, save_yaml=save_yaml, drop_keys=['dashboardid'])
 
 def environ_or_required(key):
     "Argparse environment vars helper"
