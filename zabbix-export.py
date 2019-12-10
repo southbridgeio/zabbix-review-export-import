@@ -198,8 +198,15 @@ def main(zabbix_, save_yaml, directory, only="all"):
         logging.info("Processing mediatypes...")
         mediatypes = zabbix_.mediatype.get()
         mediatypeid2mediatype = {"0": '__ALL__'}  # key: mediatypeid, value: mediatype name
-        for mt in mediatypes: mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
-        dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
+        for mt in mediatypes:
+            if api_version <= parse_version("4.4"):
+                mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
+            else:
+                mediatypeid2mediatype[mt['mediatypeid']] = mt['name']
+        if api_version <= parse_version("4.4"):
+            dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
+        else:
+            dumps_json(object='mediatypes', data=mediatypes, key='name', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
 
     if only in ("all","images"):
         logging.info("Processing images...")
