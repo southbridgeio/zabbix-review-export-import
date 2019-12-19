@@ -444,7 +444,11 @@ def main(zabbix_, save_yaml, directory, only="all"):
                 del w['widgetid']
                 w['fields'] = sorted(w['fields'], key = lambda i: i['name']) # sort to stabilize dumps
                 for f in w['fields']:
-                    if f['type'] == '6': # graph
+                    if f['type'] == '4': # item
+                        f['value'] = itemid2item[f['value']]
+                    elif f['type'] == '5': # item prototype
+                        f['value'] = itemid2proto[f['value']]
+                    elif f['type'] == '6': # graph
                         f['value'] = graphid2graph[f['value']]
                     elif f['type'] == '7': # graph prototype
                         f['value'] = graphid2proto[f['value']]
