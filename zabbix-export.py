@@ -194,7 +194,7 @@ def main(zabbix_, save_yaml, directory, only="all"):
     # Read more in https://www.zabbix.com/documentation/4.0/manual/api/reference/configuration/export
     logging.info("Start export JSON part...")
 
-    if only in ("all", "mediatypes", "users", "actions"):
+    if only in ("all", "mediatypes", "users", "actions", "dashboards"):
         logging.info("Processing mediatypes...")
         mediatypes = zabbix_.mediatype.get()
         mediatypeid2mediatype = {"0": '__ALL__'}  # key: mediatypeid, value: mediatype name
