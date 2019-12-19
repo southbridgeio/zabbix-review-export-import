@@ -203,10 +203,12 @@ def main(zabbix_, save_yaml, directory, only="all"):
                 mediatypeid2mediatype[mt['mediatypeid']] = mt['description']
             else:
                 mediatypeid2mediatype[mt['mediatypeid']] = mt['name']
-        if api_version <= parse_version("4.4"):
-            dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
-        else:
-            dumps_json(object='mediatypes', data=mediatypes, key='name', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
+
+        if only in ("all", "mediatypes"):
+            if api_version <= parse_version("4.4"):
+                dumps_json(object='mediatypes', data=mediatypes, key='description', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
+            else:
+                dumps_json(object='mediatypes', data=mediatypes, key='name', save_yaml=save_yaml, directory=directory, drop_keys=["mediatypeid"])
 
     if only in ("all","images"):
         logging.info("Processing images...")
@@ -229,7 +231,9 @@ def main(zabbix_, save_yaml, directory, only="all"):
         # resolve hostgroupids:
         for usergroup in usergroups:
             usergroup['rights'] = [{"id": groupid2group[r['id']], "permission": r['permission']} for r in usergroup['rights']]
-        dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory, drop_keys=["usrgrpid"])
+
+        if only in ("all", "usergroups"):
+            dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory, drop_keys=["usrgrpid"])
 
     if only in ("all", "users", "screens", "actions", "dashboards"):
         logging.info("Processing users...")
@@ -243,7 +247,9 @@ def main(zabbix_, save_yaml, directory, only="all"):
                 del m['mediaid']
                 del m['userid']
                 m['mediatypeid'] = mediatypeid2mediatype[m['mediatypeid']] # resolve mediatype
-        dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory, drop_keys=["userid", "attempt_clock", "attempt_failed", "attempt_ip"])
+
+        if only in ("all", "users"):
+            dumps_json(object='users', data=users, key='alias', save_yaml=save_yaml, directory=directory, drop_keys=["userid", "attempt_clock", "attempt_failed", "attempt_ip"])
 
     if only in ("all", "proxy"):
         logging.info("Processing proxy...")
@@ -337,7 +343,8 @@ def main(zabbix_, save_yaml, directory, only="all"):
                 elif si['resourcetype'] == '20':                           # graph prototype
                     si['resourceid'] = graphid2proto[si['resourceid']]
 
-        dumps_json(object='screens', data=screens, save_yaml=save_yaml, directory=directory, drop_keys=["screenid"])
+        if only in ("all", "screens"):
+            dumps_json(object='screens', data=screens, save_yaml=save_yaml, directory=directory, drop_keys=["screenid"])
 
     if only in ("all", "actions", "usermacro"):
         logging.info("Processing action...")
@@ -419,7 +426,8 @@ def main(zabbix_, save_yaml, directory, only="all"):
                     condition['value2'] = triggerid2trigger[condition['value']]['host']
                     condition['value'] = triggerid2trigger[condition['value']]['description']
 
-        dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
+        if only in ("all", "actions"):
+            dumps_json(object='actions', data=actions, save_yaml=save_yaml, directory=directory, drop_keys=["actionid"])
 
     if only in ("all", "usermacro"):
         logging.info("Processing user macroses...")
