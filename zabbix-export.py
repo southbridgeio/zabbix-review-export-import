@@ -235,7 +235,7 @@ def main(zabbix_, save_yaml, directory, only="all"):
         if only in ("all", "usergroups"):
             dumps_json(object='usergroups', data=usergroups, save_yaml=save_yaml, directory=directory, drop_keys=["usrgrpid"])
 
-    if only in ("all", "users", "screens", "actions", "dashboards"):
+    if only in ("all", "users", "screens", "actions", "dashboards", "usermacro"):
         logging.info("Processing users...")
         users = zabbix_.user.get(selectMedias='extend', selectUsrgrps='extend')
         userid2user = {}            # key: userid, value: user alias
