@@ -194,7 +194,7 @@ def main(zabbix_, save_yaml, directory, only="all"):
     # Read more in https://www.zabbix.com/documentation/4.0/manual/api/reference/configuration/export
     logging.info("Start export JSON part...")
 
-    if only in ("all", "mediatypes", "users", "actions", "dashboards"):
+    if only in ("all", "mediatypes", "users", "actions", "dashboards", "screens", "usermacro"):
         logging.info("Processing mediatypes...")
         mediatypes = zabbix_.mediatype.get()
         mediatypeid2mediatype = {"0": '__ALL__'}  # key: mediatypeid, value: mediatype name
@@ -215,7 +215,7 @@ def main(zabbix_, save_yaml, directory, only="all"):
         images = zabbix_.image.get()
         dumps_json(object='images', data=images, save_yaml=save_yaml, directory=directory, drop_keys=["imageid"])
 
-    if only in ("all", "usergroups", "screens", "actions", "dashboards"):
+    if only in ("all", "usergroups", "screens", "actions", "dashboards", "usermacro"):
         logging.info("Processing usergroups...")
         usergroups = zabbix_.usergroup.get(selectRights='extend')
         usergroupid2usergroup = {}  # key: usergroupid, value: usergroup name
