@@ -275,7 +275,7 @@ def main(zabbix_, save_yaml, directory, only="all"):
             for h in m['hosts']:
                 del h['hostid']
             for g in m['groups']:
-                del h['groupid']
+                del g['groupid']
             for tp in m['timeperiods']:
                 del tp['timeperiodid']
             m['hostids'] = m.pop('hosts') # rename for easy import
