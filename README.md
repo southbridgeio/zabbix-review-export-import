@@ -30,7 +30,7 @@ It's simple to start use this script as backup mechanism:
 ```bash
 # git clone THIS_REPO or download and unpack archive
 
-python -mpip install -r requirements.xml
+python -mpip install -r requirements.txt
 
 # smoke test :)
 python ./zabbix-export.py --help
