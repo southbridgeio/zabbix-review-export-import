@@ -389,11 +389,13 @@ def main(zabbix_, save_yaml, directory, only="all"):
                             del aa['operationid']
                     if 'opmessage' in op:
                         op['opmessage']['mediatypeid'] = mediatypeid2mediatype[op['opmessage']['mediatypeid']]
-                        del op['opmessage']['operationid']
+                        try: del op['opmessage']['operationid']
+                        except KeyError: pass
                     if 'opmessage_grp' in op:
                         for aa in op['opmessage_grp']:
                             aa['usrgrpid'] = usergroupid2usergroup[aa['usrgrpid']]
-                            del aa['operationid']
+                            try: del aa['operationid']
+                            except KeyError: pass
                     if 'opmessage_usr' in op:
                         for aa in op['opmessage_usr']:
                             aa['userid'] = userid2user[aa['userid']]
