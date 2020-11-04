@@ -88,7 +88,7 @@ def dumps_json(object, data, directory, key='name', save_yaml=False,drop_keys=[]
         if drop_keys:
             for drop_key in drop_keys:
                 if drop_key in item:
-                    del item[drop_key]
+                    item.pop(drop_key, None)
         txt = json.dumps(item, indent=4)
 
         # Remove bad characters from name
@@ -242,10 +242,10 @@ def main(zabbix_, save_yaml, directory, only="all"):
         for u in users:
             userid2user[u['userid']] = u['alias']
             for ug in u['usrgrps']:
-                del ug['usrgrpid']
+                ug.pop('usrgrpid', None)
             for m in u['medias']:
-                del m['mediaid']
-                del m['userid']
+                m.pop('mediaid', None)
+                m.pop('userid', None)
                 m['mediatypeid'] = mediatypeid2mediatype[m['mediatypeid']] # resolve mediatype
 
         if only in ("all", "users"):
@@ -273,11 +273,11 @@ def main(zabbix_, save_yaml, directory, only="all"):
             m['hosts'] = sorted(m['hosts'], key = lambda i: i['name']) # sort to stabilize dumps
             m['groups'] = sorted(m['groups'], key = lambda i: i['name']) # sort to stabilize dumps
             for h in m['hosts']:
-                del h['hostid']
+                h.pop('hostid', None)
             for g in m['groups']:
-                del g['groupid']
+                g.pop('groupid', None)
             for tp in m['timeperiods']:
-                del tp['timeperiodid']
+                tp.pop('timeperiodid', None)
             m['hostids'] = m.pop('hosts') # rename for easy import
             m['groupids'] = m.pop('groups') # rename for easy import
         dumps_json(object='maintenances', data=maintenances, save_yaml=save_yaml, directory=directory, drop_keys=["maintenanceid"])
@@ -316,8 +316,8 @@ def main(zabbix_, save_yaml, directory, only="all"):
             screen['users'] = [{'permission': user['permission'], 'userid': userid2user[user['userid']]} for user in screen['users']]
             screen['userGroups'] = [{"permission": group['permission'], "usrgrpid": usergroupid2usergroup[group['usrgrpid']]} for group in screen['userGroups']]
             for si in screen['screenitems']:
-                del si['screenid']
-                del si['screenitemid']
+                si.pop('screenid', None)
+                si.pop('screenitemid', None)
                 if si['resourcetype'] == '0': # graph
                     si['resourceid'] = graphid2graph[si['resourceid']]
                 elif si['resourcetype'] == '1':                            # simple graph
@@ -372,51 +372,49 @@ def main(zabbix_, save_yaml, directory, only="all"):
         for action in actions:
             action['filter']['conditions'] = sorted(action['filter']['conditions'], key = lambda i: i['formulaid']) # sort to stabilize dumps
             action['filter']['formula'] = action['filter']['eval_formula']
-            del action['filter']['eval_formula']
+            action['filter'].pop('eval_formula', None)
             action['recovery_operations'] = action.pop('recoveryOperations') # rename key for easy import
             action['acknowledge_operations'] = action.pop('acknowledgeOperations') # rename key for easy import
             for action_type in ('operations', 'acknowledge_operations', 'recovery_operations'):
                 for op in action[action_type]:
-                    del op['actionid']
-                    del op['operationid']
+                    op.pop('actionid', None)
+                    op.pop('operationid', None)
                     if 'optemplate' in op:
                         for aa in op['optemplate']:
                             aa['templateid'] = templateid2template[aa['templateid']]
-                            del aa['operationid']
+                            aa.pop('operationid', None)
                     if 'opgroup' in op:
                         for aa in op['opgroup']:
                             aa['groupid'] = groupid2group[aa['groupid']]
-                            del aa['operationid']
+                            aa.pop('operationid', None)
                     if 'opmessage' in op:
                         op['opmessage']['mediatypeid'] = mediatypeid2mediatype[op['opmessage']['mediatypeid']]
-                        try: del op['opmessage']['operationid']
-                        except KeyError: pass
+                        op['opmessage'].pop('operationid', None)
                     if 'opmessage_grp' in op:
                         for aa in op['opmessage_grp']:
                             aa['usrgrpid'] = usergroupid2usergroup[aa['usrgrpid']]
-                            try: del aa['operationid']
-                            except KeyError: pass
+                            aa.pop('operationid', None)
                     if 'opmessage_usr' in op:
                         for aa in op['opmessage_usr']:
                             aa['userid'] = userid2user[aa['userid']]
-                            del aa['operationid']
+                            aa.pop('operationid', None)
                     if 'opcommand' in op:
-                        del op['opcommand']['operationid']
+                        op['opcommand'].pop('operationid', None)
                     if 'opcommand_hst' in op:
                         for aa in op['opcommand_hst']:
                             if str(aa['hostid']) != '0': # '0' means current host
                                 aa['hostid'] = hostid2host[aa['hostid']]
-                            del aa['operationid']
-                            del aa['opcommand_hstid']
+                            aa.pop('operationid', None)
+                            aa.pop('opcommand_hstid', None)
                     if 'opcommand_grp' in op:
                         for aa in op['opcommand_grp']:
                             aa['groupid'] = groupid2group[aa['groupid']]
-                            del aa['operationid']
-                            del aa['opcommand_grpid']
+                            aa.pop('operationid', None)
+                            aa.pop('opcommand_grpid', None)
                     if 'opconditions' in op:
                         for aa in op['opconditions']:
-                            del aa['operationid']
-                            del aa['opconditionid']
+                            aa.pop('operationid', None)
+                            aa.pop('opconditionid', None)
             for condition in action['filter']['conditions']:
                 if condition['conditiontype'] == '0': # hostgroup
                     condition['value'] = groupid2group[condition['value']]
@@ -451,7 +449,7 @@ def main(zabbix_, save_yaml, directory, only="all"):
             for ug in d['userGroups']:
                 ug['usrgrpid'] = usergroupid2usergroup[ug['usrgrpid']]
             for w in d['widgets']:
-                del w['widgetid']
+                w.pop('widgetid', None)
                 w['fields'] = sorted(w['fields'], key = lambda i: i['name']) # sort to stabilize dumps
                 for f in w['fields']:
                     if f['type'] == '4': # item
