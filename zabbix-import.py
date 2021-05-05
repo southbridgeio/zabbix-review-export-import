@@ -1486,6 +1486,9 @@ def main(
     op_result = None
 
     if "zabbix_export" in yml:
+        if "<?xml version=" in yml:
+            logging.error("There is not YAML file, but XML one: {}".format(yaml_file))
+            return None
         logging.debug("Loading from XML-exported YAML")
         xml_exported = True
         yml = yml["zabbix_export"]
