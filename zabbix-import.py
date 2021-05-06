@@ -915,7 +915,10 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
                 macros = []
                 for macro in new_template["macros"]["macro"]:
                     macros.append(
-                        {"macro": macro["macro"], "value": macro["value"],}
+                        {
+                            "macro": macro["macro"],
+                            "value": macro["value"],
+                        }
                     )
         else:
             macros = ""
@@ -970,7 +973,10 @@ def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
                 rights = []
                 for r in yml["rights"]:
                     rights.append(
-                        {"id": group2groupid[r["id"]], "permission": r["permission"],}
+                        {
+                            "id": group2groupid[r["id"]],
+                            "permission": r["permission"],
+                        }
                     )
         else:
             rights = []
@@ -1486,6 +1492,9 @@ def main(
     op_result = None
 
     if "zabbix_export" in yml:
+        if "<?xml version=" in yml:
+            logging.error("There is not YAML file, but XML one: {}".format(yaml_file))
+            return None
         logging.debug("Loading from XML-exported YAML")
         xml_exported = True
         yml = yml["zabbix_export"]
