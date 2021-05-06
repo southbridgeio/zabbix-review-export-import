@@ -915,7 +915,10 @@ def import_template(zabbix, yml, group2groupid, template2templateid):
                 macros = []
                 for macro in new_template["macros"]["macro"]:
                     macros.append(
-                        {"macro": macro["macro"], "value": macro["value"],}
+                        {
+                            "macro": macro["macro"],
+                            "value": macro["value"],
+                        }
                     )
         else:
             macros = ""
@@ -970,7 +973,10 @@ def import_usergroup(zabbix, yml, group2groupid, usergroup2usergroupid):
                 rights = []
                 for r in yml["rights"]:
                     rights.append(
-                        {"id": group2groupid[r["id"]], "permission": r["permission"],}
+                        {
+                            "id": group2groupid[r["id"]],
+                            "permission": r["permission"],
+                        }
                     )
         else:
             rights = []
