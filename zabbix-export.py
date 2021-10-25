@@ -510,18 +510,31 @@ def main(zabbix_, save_yaml, directory, only="all"):
         for host in result:
             hostid2host[host["hostid"]] = host["name"]
         # existing triggers
-        result = zabbix_.trigger.get(
-            output=["description", "triggerid"], selectHosts=["name"]
-        )
+        # result = zabbix_.trigger.get(
+        #     output=["description", "triggerid"], selectHosts=["name"], hostids=host["hostid"]
+        # )
+        # triggerid2trigger = (
+        #     {}
+        # )  # key: triggerid, value: {description: trigger description, host: host name}
+        # for trigger in result:
+        #     triggerid2trigger[trigger["triggerid"]] = {
+        #         "description": trigger["description"],
+        #         "host": trigger["hosts"][0]["name"] if trigger["hosts"] else "",
+        #     }
         triggerid2trigger = (
             {}
-        )  # key: triggerid, value: {description: trigger description, host: host name}
-        for trigger in result:
-            triggerid2trigger[trigger["triggerid"]] = {
-                "description": trigger["description"],
-                "host": trigger["hosts"][0]["name"] if trigger["hosts"] else "",
-            }
+        )
 
+        def triggerName(triggerID):
+            result = zabbix_.trigger.get(
+                output=["description", "triggerid"], selectHosts=["name"], triggerids=[triggerID]
+            )
+
+            for trigger in result:
+                triggerid2trigger[trigger["triggerid"]] = {
+                    "description": trigger["description"],
+                    "host": trigger["hosts"][0]["name"] if trigger["hosts"] else "",
+                }
         # resolve templateids/groupids/mediatypeids/userids/usergroupids:
         for action in actions:
             action["filter"]["conditions"] = sorted(
@@ -589,6 +602,7 @@ def main(zabbix_, save_yaml, directory, only="all"):
                 if condition["conditiontype"] == "13":  # template
                     condition["value"] = templateid2template[condition["value"]]
                 if condition["conditiontype"] == "2":  # trigger
+                    triggerName(condition['value'])
                     condition["value2"] = triggerid2trigger[condition["value"]]["host"]
                     condition["value"] = triggerid2trigger[condition["value"]][
                         "description"
